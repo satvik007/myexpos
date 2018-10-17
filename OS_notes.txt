@@ -867,8 +867,21 @@ sharing the page. The constant MEMORY_FREE_LIST gives the starting address of th
 	Get Free Page function allocates the free memory page and updates the WAIT_MEM_COUNT and MEM_FREE_COUNT
 	in the system status table.
 
-	
 
+MODULE 18
+
+The LOAD instruction takes 2 arguments, a page number and a block number. 
+The XSM machine doesn't wait for the block transfer to complete, it continues
+with the execution of the next instruction. 
+
+To initiate the disk transfer using the load statement, first the process 
+has to acquire the disk. The disk status table has a LOAD / STORE bit indicating
+whether the disk operation is a load or store. To keep track of the process
+that has currently acquired the disk, the PID of the process is also stored 
+in the disk status table.
+
+When the load / store transfer is complete, XSM machine raises the hardaware
+interrupt called the disk interrupt. 
 
 
 
