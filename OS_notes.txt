@@ -883,6 +883,78 @@ in the disk status table.
 When the load / store transfer is complete, XSM machine raises the hardaware
 interrupt called the disk interrupt. 
 
+MODULE 19
+
+There are 4 special registers in XSM which are used to obtain the cause of the exception and the 
+information related to the exception. These registers are EC, EIP, EPN, and EMA. The cause of the 
+exception is obtained from the value present in the EC register.
+
+For the events 
+1) illegal memory access (EC = 2)
+2) illegal instruction (EC = 1)
+3) arithmetic exception (EC = 3)
+
+The page fault exception (EC = 0) occurs when the last instruction in the currently running application
+tried to either - 
+a) Access / modify data from a legal address within its address space, but the page was set to invalid
+in the page table or 
+b) fetch an instruction from a legal address within its address space, whose page table entry is invalid.
+
+In either case, the exception handler resumes the execution of the process after allocating a page in
+memory, attaching the page to the process and loading the page from the disk to this memory region.
+Lazy allocation allows better memory allocation.
+
+We will modify exec to allocate the memory pages for only stack (2 pages). No memory pages will be 
+allocated to heap. Consequently, the entries in the page table corresponding to heap are set to invalid.
+For code blocks, only a single memory page is allocated and the first code block is loaded into that 
+memory page.
+
+We will write a new module function Get Code Page in the memory manager module for simultaneously 
+allocating a memory page and loading a code block.
+
+Each process has a data structure called Per-process Disk map table. The disk map table stores the disk
+block numbers corresponding to the memory pages used by the process. Each disk map table has 10 words
+of which one is for user area page, 2 for heap, 4 for code, and 2 for stack pages. 1 is unused.
+Whenever the copy of the memory page of a process is present in some disk block, that disk block number 
+is stored in the per-process Disk Map Table entry corresponding to that memory page.
+
+The SPL constant DISK_MAP_TABLE gives the starting address of the Disk Map Table of process with PID as
+0. The disk map table for any process is obtained by adding PID * 10 to DISK_MAP_TABLE.
+
+The Get Code Page function takes as input the block number of a single code block, and loads that block
+into a memory page. The purpose of this function is to find out if the current code block is already in use 
+by some other process. This is done by going through the disk map table entries of all the processes 
+checking for the code block.
+If found, the the Get Code Page checks if the code block is loaded into a memory page. If the code block
+is already present in some memory page then it just returns the page number. If not, a new memory page 
+is allocated by invoking Get Free Page function of the memory manager module. This is followed by 
+loading the code block into the newly allocated memory page using the Disk Load function of the device
+manager module. The Get Code Page function finally returns the memory page number.
+
+The exception handler uses EC register to find out the cause of the exception. If the cause is other than
+page fault, exception handler should print the appropriate error message to notify user about the 
+termination of the process. Terminated by invoking the Exit process function of process manager module
+and invoke the scheduler to schedule other processes.
+
+Expos is designed such that, page fault exception can only occur for heap and code pages. Based on EPN 
+register, the exception handler finds out whether page fault has caused for heap or code page. When page 
+fault has occured for heap page (EPN value 2 or 3), exception handler allocates a new memory page by 
+invoking the Get Free Page function in memory manager module. 
+
+After handling the page fault exception, the exception handler restores the resister context, switches
+to user stack and returns to user mode.
+
+An OS can implement Demand Paging, only if the underlying machine hardware supports re - execution of
+the instruction that caused a page fault.
+
+The Free Page Table function of the process manager moudle decrements the memory reference count of the 
+memory pages acquired by a process. If some stack / heap page is swapped in the disk, the reference 
+count of the corresponding disk block is decremented in the disk free list. 
+
+In later stages, the OS will allocate certain disk blocks to a process temporarily. This is done to 
+swap out the heap / stack pages of a process when the OS finds shortage of memory space to run all the 
+processes.
+
 
 
 
