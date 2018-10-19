@@ -1,0 +1,62 @@
+// exception handler
+print "Exeption";
+// Set the MODE FLAG to -1 in the process table of the current process.
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = -1;
+
+// Switching to kernel stack.
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+alias R0 userSP;
+userSP = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+
+backup;
+
+multipush(EIP);
+
+//  If the cause of the exception is other than page fault (EC is not equal to 0) or if the user stack is full
+if (EC != 0 || userSP == PTLR * 512 - 1) then
+	print "unknown except";
+	R0 = 0;
+	R1 = 3;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	call MOD_5;
+	breakpoint;
+	print "exe handler";
+endif;
+
+// If page fault is caused due to a code page, then get the code block number to be loaded from the disk map table.
+if (EPN >= 4 && EPN <= 7) then
+	// invoke the Get Code Page function present in the memory manager module.
+	alias R3 pid;
+	multipush(R3);
+	pid = [SYSTEM_STATUS_TABLE + 1];
+	R1 = 5;
+	R2 = [DISK_MAP_TABLE + pid * 10 + EPN];
+	call MOD_2;
+	multipop(R3);
+	// Update the page table entry for this code 
+	[PTBR + pid * 20 + 2 * EPN] = R0;
+	[PTBR + pid * 20 + 2 * EPN + 1] = "1100";
+
+// If page fault is caused due to a heap page, then invoke the Get Free Page function present in the memory manager module. 
+if (EPN == 2 && EPN == 3) then
+	alias R3 pid;
+	R1 = 1;
+	call MOD_2;
+	pid = [SYSTEM_STATUS_TABLE + 1];
+	[PTBR + pid * 20 + 2 * EPN] = R0;
+	[PTBR + pid * 20 + 2 * EPN + 1] = "1110";
+endif;
+
+multipop(EIP)
+restore;
+
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+
+// Increment the stack pointer, store the EIP value onto the location pointed to by SP and return to the user mode.
+SP = SP + 1;
+[SP] = EIP;
+
+//returning control to the newly scheduled process
+ireturn;
