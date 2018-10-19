@@ -39,4 +39,4 @@ y.tab.c: splparser.y
 	$(YACC) -d splparser.y
 
 clean:
-	$(RM) spl *.o lex.yy.c y.tab.h y.tab.c
+	$(RM) spl *.o lex.yy.c y.tab.h y.tab.c .temp

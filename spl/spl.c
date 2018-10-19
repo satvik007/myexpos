@@ -216,7 +216,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nLT R%d, %s\n", C_REG_BASE + regcount,  reg1,  C_REG_BASE + regcount,  reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -257,7 +257,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nGT R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -298,7 +298,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nEQ R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -339,7 +339,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nLE R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -380,7 +380,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nGE R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -421,7 +421,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nNE R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -462,7 +462,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nMUL R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -503,7 +503,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nADD R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -538,7 +538,7 @@ void codegen(node * root)
             out_linecount++;
             fprintf(fp, "MOV R%d, 1\n", C_REG_BASE + regcount);
             regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -571,7 +571,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nADD R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -582,7 +582,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nADD R%d, %d\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, root->ptr2->value);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -628,7 +628,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nSUB R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -639,7 +639,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nSUB R%d, %d\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, root->ptr2->value);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -650,7 +650,7 @@ void codegen(node * root)
                     out_linecount++;
                     fprintf(fp, "MOV R%d, %s\n", C_REG_BASE + regcount, reg1);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -694,7 +694,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nMUL R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -705,7 +705,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nMUL R%d, %d\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, root->ptr2->value);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -751,7 +751,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nDIV R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -762,7 +762,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nDIV R%d, %d\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, root->ptr2->value);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -773,7 +773,7 @@ void codegen(node * root)
                     out_linecount++;
                     fprintf(fp, "MOV R%d, %s\n", C_REG_BASE + regcount, reg1);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -818,7 +818,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nMOD R%d, %s\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, reg2);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -829,7 +829,7 @@ void codegen(node * root)
                     out_linecount+=2;
                     fprintf(fp, "MOV R%d, %s\nMOD R%d, %d\n", C_REG_BASE + regcount, reg1, C_REG_BASE + regcount, root->ptr2->value);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -840,7 +840,7 @@ void codegen(node * root)
                     out_linecount++;
                     fprintf(fp, "MOV R%d, %s\n", C_REG_BASE + regcount, reg1);
                     regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
@@ -1021,7 +1021,7 @@ void codegen(node * root)
             out_linecount++;
             fprintf(fp, "MOV R%d, %d\n", C_REG_BASE + regcount, root->value);
             regcount++;
-            if(regcount == C_REG_BASE + 4)
+            if(regcount == 5)
             {
                 printf("Register Overflow. Please reduce size of your expression.\n");
                 exit(0);
@@ -1031,7 +1031,7 @@ void codegen(node * root)
             out_linecount++;
             fprintf(fp, "MOV R%d, %s\n", C_REG_BASE + regcount, root->name);
             regcount++;
-            if(regcount == C_REG_BASE + 4)
+            if(regcount == 5)
             {
                 printf("Register Overflow. Please reduce size of your expression.\n");
                 exit(0);
@@ -1339,7 +1339,7 @@ void codegen(node * root)
              out_linecount++;
              fprintf(fp, "MOV R%d, %s\n", C_REG_BASE + regcount, reg1);
              regcount++;
-                    if(regcount == C_REG_BASE + 4)
+                    if(regcount == 5)
                     {
                         printf("Register Overflow. Please reduce size of your expression.\n");
                         exit(0);
