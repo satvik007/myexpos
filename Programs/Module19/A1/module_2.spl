@@ -1,5 +1,8 @@
 // Memory Manager Module
 
+// print "mod 2";
+// print R1;
+
 alias functionNum R1;
 
 // Get Free Page
@@ -130,6 +133,7 @@ if (functionNum == 5) then
 
     // Return the memory page number to which the code block has been loaded. 
     R0 = pageNum;
+    print "gcp exit";
     return;
 endif;
 

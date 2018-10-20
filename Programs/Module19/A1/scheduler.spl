@@ -1,4 +1,5 @@
 // current process and its processing table.
+
 alias curProcess R0;
 alias processTable R1;
 curProcess = [SYSTEM_STATUS_TABLE + 1];
@@ -40,6 +41,7 @@ while(curProcess != iter) do
 endwhile;
 
 if (curProcess == 0 && other == 0) then
+    breakpoint;
     halt;
 endif;
 

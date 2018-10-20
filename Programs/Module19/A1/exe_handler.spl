@@ -1,11 +1,18 @@
 // exception handler
+
+// print "exe";
+// print EC;
+// print EPN;
 breakpoint;
+// print EIP;
+
+// breakpoint;
 // Set the MODE FLAG to -1 in the process table of the current process.
 [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = -1;
 
 // Switching to kernel stack.
 [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
-alias userSP R0;
+alias userSP R8;
 userSP = SP;
 SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
 
@@ -16,16 +23,16 @@ multipush(EIP);
 //  If the cause of the exception is other than page fault (EC is not equal to 0) or if the user stack is full
 if (EC != 0 || userSP == PTLR * 512 - 1) then
 	if (userSP == PTLR * 512 - 1) then
-		print "stack smash";
+		print "stack";
 	endif;
 	if (EC == 1) then
-		print "Illegal ins";
+		print "Ill ins";
 	endif;
 	if (EC == 2) then
-		print "Illegal mem";
+		print "Ill mem";
 	endif;
 	if (EC == 3) then
-		print "Arithmetic";
+		print "Arith";
 	endif;
 
 	// Then invoke the Exit Process function to halt the process and invoke the scheduler. 
@@ -46,6 +53,7 @@ if (EPN >= 4 && EPN <= 7) then
 	R1 = 5;
 	R2 = [DISK_MAP_TABLE + pid * 10 + EPN];
 	call MOD_2;
+	breakpoint;
 	multipop(R3);
 	// Update the page table entry for this code 
 	[PTBR + 2 * EPN] = R0;
@@ -68,7 +76,7 @@ SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
 
 // Increment the stack pointer, store the EIP value onto the location pointed to by SP and return to the user mode.
 SP = SP + 1;
-[SP] = EIP;
+[[PTBR + 2 * (SP / 512)] * 512 + (SP % 512)] = EIP;
 
-breakpoint;
+//breakpoint;
 ireturn;

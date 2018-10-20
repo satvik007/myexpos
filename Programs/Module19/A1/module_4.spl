@@ -1,5 +1,8 @@
 // Device Manager Module
 
+// print "mod 4";
+// print R1;
+
 alias functionNum R8;
 alias currentPID R9;
 

@@ -1,5 +1,8 @@
 // Resource Manager Module
 
+// print "mod 0";
+// print R1;
+
 alias functionNum R1;
 alias currentPID R2;
 
