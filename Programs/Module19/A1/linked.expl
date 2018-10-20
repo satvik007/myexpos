@@ -20,8 +20,6 @@ int main()
   begin
     temp = exposcall ("Read", -1, length);
     x = initialize();
-    temp = exposcall ("Write", -2, length);
-    //length = 5;
     head=null;
     //read(length); 
 

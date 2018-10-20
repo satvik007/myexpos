@@ -955,6 +955,21 @@ In later stages, the OS will allocate certain disk blocks to a process temporari
 swap out the heap / stack pages of a process when the OS finds shortage of memory space to run all the 
 processes.
 
+***************************************************************************************************
+MODULE 20
+
+The child process will be allocated a different PID and a new address space. 
+The child process will have a different process table and page table. 
+The child an parent will share the code and heap regions of the address space. 
+2 new stack pages and a new user area page.
+
+The process table is initialized with the same values except for 
+TICK, PID, PPID, USER AREA PAGE NUMBER, KERNEL STACK POINTER, INPUT BUFFER, MODE FLAG, PTBR and PTLR.
+The contents of the stack of the parent are copied into the new stack pages allocated for the child.
+
+The contents of the per process resource table in the user area page of the parent process is copied
+to the child process. However, the contents of the parent's kernel stack are not copied to the child, 
+and the kernel stack of the child is set to empty 
 
 
 

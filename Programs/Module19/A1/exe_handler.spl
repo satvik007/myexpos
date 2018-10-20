@@ -3,17 +3,15 @@
 // print "exe";
 // print EC;
 // print EPN;
-breakpoint;
 // print EIP;
 
-// breakpoint;
 // Set the MODE FLAG to -1 in the process table of the current process.
 [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = -1;
 
 // Switching to kernel stack.
 [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
-alias userSP R8;
-userSP = SP;
+//R0 = 0;
+//breakpoint;
 SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
 
 backup;
@@ -21,8 +19,8 @@ backup;
 multipush(EIP);
 
 //  If the cause of the exception is other than page fault (EC is not equal to 0) or if the user stack is full
-if (EC != 0 || userSP == PTLR * 512 - 1) then
-	if (userSP == PTLR * 512 - 1) then
+if (EC != 0 || [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] == PTLR * 512 - 1) then
+	if ([PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] == PTLR * 512 - 1) then
 		print "stack";
 	endif;
 	if (EC == 1) then
@@ -36,7 +34,7 @@ if (EC != 0 || userSP == PTLR * 512 - 1) then
 	endif;
 
 	// Then invoke the Exit Process function to halt the process and invoke the scheduler. 
-	R0 = 0;
+	//R0 = 0;
 	R1 = 3;
 	R2 = [SYSTEM_STATUS_TABLE + 1];
 	call MOD_1;
@@ -53,7 +51,6 @@ if (EPN >= 4 && EPN <= 7) then
 	R1 = 5;
 	R2 = [DISK_MAP_TABLE + pid * 10 + EPN];
 	call MOD_2;
-	breakpoint;
 	multipop(R3);
 	// Update the page table entry for this code 
 	[PTBR + 2 * EPN] = R0;
