@@ -16,6 +16,8 @@ SP = SP + 1;
 // finding pid of new process.
 alias iter R2;
 alias newProcess R5;
+alias other R8;
+other = 0;
 if(curProcess == MAX_PROC_NUM - 1) then
     iter = 1;
 else iter = curProcess + 1;
@@ -24,14 +26,22 @@ endif;
 while(curProcess != iter) do
     alias state R3;
     state = [PROCESS_TABLE + 16 * iter + 4];
+    if(state != TERMINATED) then
+        other = 1;
+    endif;
     if(state == CREATED || state == READY) then
         break;
     endif;
+
     if(iter + 1 == MAX_PROC_NUM) then
         iter = 1;
     else iter = iter + 1;
     endif;
 endwhile;
+
+if (curProcess == 0 && other == 0) then
+    halt;
+endif;
 
 // no process found, idle is scheduled.
 if(iter == curProcess && [PROCESS_TABLE + 16 * iter + 4] != READY) then

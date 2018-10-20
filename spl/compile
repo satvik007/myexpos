@@ -14,3 +14,4 @@
 ./spl ../Programs/Module19/A1/module_1.spl
 ./spl ../Programs/Module19/A1/module_2.spl
 ./spl ../Programs/Module19/A1/diskint.spl
+./spl ../Programs/Module19/A1/exe_handler.spl
