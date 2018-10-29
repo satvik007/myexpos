@@ -1,0 +1,111 @@
+//////////EXEC System Call
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 9;
+alias userSP R0;
+userSP = SP;
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;  // saving user stack value
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;  // setting up kernal stack
+alias physicalPageNum R1;
+alias offset R2;
+alias filenamePhysicalAddr R3;
+physicalPageNum = [PTBR + 2 * ((userSP - 4)/ 512)];
+offset = (userSP - 4) % 512;
+filenamePhysicalAddr = (physicalPageNum * 512) + offset;
+alias filename R4;
+filename = [filenamePhysicalAddr];
+alias cnter R5;
+cnter = 0;
+alias at R6;
+alias found R7;
+alias typ R8;
+found = -1;
+while (cnter < 60) do  // inode table has maximum of 60 entries
+	at = [INODE_TABLE + (cnter * 16) + 1];
+	typ = [INODE_TABLE + (cnter * 16)];
+	if (at == filename && typ == EXEC) then
+		found = cnter;
+		break;
+	endif;
+	cnter = cnter + 1;
+endwhile; 
+if (found == -1) then
+	alias physicalAddrRetVal R9;
+	physicalAddrRetVal = ([PTBR + 2 * ((userSP - 1) / 512)] * 512) + ((userSP - 1) % 512);
+	[physicalAddrRetVal] = -1;
+	SP = userSP;
+	[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+	ireturn;
+endif;
+multipush (R0, R1, R2, R3, R4, R5, R6, R7, R8);
+R1 = 3;  // calling exit process
+R2 = [SYSTEM_STATUS_TABLE + 1];
+call MOD_1;
+multipop (R0, R1, R2, R3, R4, R5, R6, R7, R8);
+alias upgnumber R9;
+upgnumber = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11];
+[MEMORY_FREE_LIST + upgnumber] = [MEMORY_FREE_LIST + upgnumber] + 1;
+[SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] - 1;	
+SP = upgnumber * 512 - 1;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 4] = RUNNING;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 7] = found;
+//Library
+[PTBR+0] = 63;
+[PTBR+1] = "0100";
+[PTBR+2] = 64;
+[PTBR+3] = "0100";
+multipush (R2, R5);
+alias perProcessTable R2; // initialising per-process Resource Table
+perProcessTable = (upgnumber + 1) * 512 - 16;
+cnter = 0;
+while (cnter < 8) do
+	[perProcessTable + 2 * cnter] = -1;
+	[perProcessTable + 2 * cnter + 1] = -1;
+	cnter = cnter + 1;
+endwhile;
+multipop (R2, R5);
+alias s1 R10;
+alias s2 R11;
+ // assumption that only regis <= 9 may get modified
+multipush (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9);
+R1 = 1;
+call MOD_2;
+s1 = R0;
+multipop (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9);
+multipush (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9);
+R1 = 1;
+call MOD_2;
+s2 = R0;
+multipop (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9);
+//Heap
+[PTBR+4] = -1;
+[PTBR+5] = "0000";
+[PTBR+6] = -1;
+[PTBR+7] = "0000";
+//Stack
+[PTBR+16] = s1;
+[PTBR+17] = "0110";
+[PTBR+18] = s2;
+[PTBR+19] = "0110";
+//////////loading first block//////////////
+multipush (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10);
+R1 = 5;
+R2 = [INODE_TABLE + (found * 16) + 8];
+call MOD_2;
+[PTBR + 8] = R0;
+[PTBR + 9] = "0100";
+multipop (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10);
+////////////initialise disk map table//////////////
+cnter = 8;
+while (cnter <= 11) do
+	[DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + cnter - 4] = [INODE_TABLE + (found * 16) + cnter];
+	cnter = cnter + 1;
+endwhile;
+[DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + 8] = -1;
+[DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + 9] = -1;
+[DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + 0] = -1;
+[DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + 1] = -1;
+[DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + 2] = -1;
+[DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + 3] = -1;
+[[PTBR+16] * 512] = [[PTBR+8] * 512 + 1];
+SP = 8 * 512;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+ireturn;

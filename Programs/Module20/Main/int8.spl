@@ -26,7 +26,7 @@ else
     alias newPTBR R8;
     newPTBR = PAGE_TABLE_BASE + 20 * newPid;
     alias newProcess R10;
-    newProcess = PROCESS_TABLE + 16 * newPID;
+    newProcess = PROCESS_TABLE + 16 * newPid;
 
     // The child process requires new memory pages for stack (two) and user area page (one).
     // STACK
@@ -74,6 +74,8 @@ else
         [newPTBR + 5] = "0110";
         [newPTBR + 6] = [PTBR + 6];
         [newPTBR + 7] = "0110";
+        [MEMORY_FREE_LIST + [newPTBR + 4]] = [MEMORY_FREE_LIST + [newPTBR + 4]] + 1;
+        [MEMORY_FREE_LIST + [newPTBR + 6]] = [MEMORY_FREE_LIST + [newPTBR + 6]] + 1;
     endif;
 
     alias oldProcess R11;
@@ -112,26 +114,49 @@ else
         iter = iter + 1;
     endwhile;
 
-    alias old_page_table R12;
-    alias new_page_table R13;
-    old_page_table = PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20;
-    new_page_table = PAGE_TABLE_BASE + newPid * 20;
-
+    
     // Initialize the page table of the child process.
     // As heap, code and library pages are shared by the parent process and the child process, copy these entries
+    // heap already done.
+
+    // library
     iter = 0;
-    while (iter < 16) do
-        [new_page_table + iter] = [old_page_table + iter];
-        [new_page_table + iter + 1] = [old_page_table + iter + 1];
-        if ([new_page_table+ iter] ) then
-            [MEMORY_FREE_LIST + iter]
+    while (iter < 4) do
+        [newPTBR + iter] = [PTBR + iter];
+        [newPTBR + iter + 1] = [PTBR + iter + 1];
+        if ([newPTBR + iter] != -1) then
+            [MEMORY_FREE_LIST + [newPTBR + iter]] = [MEMORY_FREE_LIST + [newPTBR + iter]] + 1;
         endif;
         iter = iter + 2;
     endwhile;
+
+    // code pages
+    iter = 8;
+    while (iter < 16) do
+        [newPTBR + iter] = [PTBR + iter];
+        [newPTBR + iter + 1] = [PTBR + iter + 1];
+        if ([newPTBR + iter] != -1) then
+            [MEMORY_FREE_LIST + [newPTBR + iter]] = [MEMORY_FREE_LIST + [newPTBR + iter]] + 1;
+        endif;
+        iter = iter + 2;
+    endwhile;
+
+    // Copy content of the user stack pages of the parent to the user stack pages of the child word by word.
+    iter = 0;
+    while (iter < 512) do
+        [[newPTBR + 16] * 512 + iter] = [[PTBR + 16] * 512 + iter];
+        [[newPTBR + 18] * 512 + iter] = [[PTBR + 18] * 512 + iter];
+        iter = iter + 1;
+    endwhile;
+
+    // Store the value in the BP register on top of the kernel stack of child process.
+    [[newPTBR + 11] * 512] = BP;
+    // [newProcess + 12] = 1; // Not quite sure of this one.
+
+    // Set up return values in the user stacks of the parent and the child processes.
+    [[PTBR + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = newPid;
+    [[newPTBR + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = 0;
     
-
-
-
 endif;
 
 

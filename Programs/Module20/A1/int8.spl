@@ -1,0 +1,118 @@
+///////////Fork System Call
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 8;  // setting mode to the system call number of fork
+alias userSP R10;
+userSP = SP;
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;  // saving user stack value
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;  // setting up kernal stack
+R1 = 1;
+call MOD_1;  // no need to do multipush, care has been taken for that
+alias childpid R11;
+childpid = R0;
+if (R0 == -1) then
+	alias physicalAddrRetVal R9;
+	physicalAddrRetVal = ([PTBR + 2 * ((userSP - 1) / 512)] * 512) + ((userSP - 1) % 512);
+	[physicalAddrRetVal] = -1;
+	SP = userSP;
+	[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+	ireturn;
+endif;
+alias s1 R1;  // allocating pages for stack and user area page
+alias s2 R2;
+alias upg R3;
+multipush (R1, R2, R3);
+R1 = 1;
+call MOD_2;  // no need to do multipush etc as my get free page function takes care of that
+multipop (R1, R2, R3);
+s1 = R0;
+multipush (R1, R2, R3);
+R1 = 1;
+call MOD_2;
+multipop (R1, R2, R3);
+s2 = R0;
+multipush (R1, R2, R3);
+R1 = 1;
+call MOD_2;
+multipop (R1, R2, R3);
+upg = R0;  
+if (s1 == -1 || s2 == -1 || upg == -1) then  // checking whether the page obtained is -1 or not (Just being oversmart :)
+	alias physicalAddrRetVal R9;
+	physicalAddrRetVal = ([PTBR + 2 * ((userSP - 1) / 512)] * 512) + ((userSP - 1) % 512);
+	[physicalAddrRetVal] = -1;
+	SP = userSP;
+	[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+	ireturn;
+endif;
+// Copy the USERID field from the process table of the parent to the child process, as the user (currently logged in) will be same for both child and parent. (We will discuss USERID later when we add multi-user support to eXpOS.) Similarly, copy the SWAP FLAG and the USER AREA SWAP STATUS fields. (These fields will be discussed later, when we discuss swapping out processes from memory to the disk.) INODE INDEX for the child and the parent processes will be same, as both of them run the same program. UPTR field should also be copied from the parent process. As mentioned earlier, content of the user stack is same for both of them, so when both of the processes resume execution in user mode, the value of SP must be the same.
+[PROCESS_TABLE + 3 + childpid * 16] = [PROCESS_TABLE + 3 + [SYSTEM_STATUS_TABLE + 1] * 16];
+[PROCESS_TABLE + 6 + childpid * 16] = [PROCESS_TABLE + 6 + [SYSTEM_STATUS_TABLE + 1] * 16];
+[PROCESS_TABLE + 10 + childpid * 16] = [PROCESS_TABLE + 10 + [SYSTEM_STATUS_TABLE + 1] * 16];
+[PROCESS_TABLE + 7 + childpid * 16] = [PROCESS_TABLE + 7 + [SYSTEM_STATUS_TABLE + 1] * 16];
+[PROCESS_TABLE + 13 + childpid * 16] = [PROCESS_TABLE + 13 + [SYSTEM_STATUS_TABLE + 1] * 16];
+
+// Setting mode, kptr, tick to 0. MODE FLAG, KPTR are set to zero as the child process starts its execution from the user mode. The TICK field keep track of how long a process has been running in memory and should be initialized to 0, when a process is created. (The TICK field will be used later to decide which process must be swapped out of memory when memory is short. The strategy will be to swap out that process which had been in memory for the longest time). It is not required to initialise input buffer
+[PROCESS_TABLE + 0 + childpid * 16] = 0;
+[PROCESS_TABLE + 9 + childpid * 16] = 0;
+[PROCESS_TABLE + 12 + childpid * 16] = 0;
+//////
+[PROCESS_TABLE + 2 + childpid * 16] = [SYSTEM_STATUS_TABLE + 1]; // setting ppid to parents pid
+[PROCESS_TABLE + 11 + childpid * 16] = upg;  // setting the user area page
+//The per-process resource table has details about the open instances of the files and the semaphores currently acquired by the process. Child process shares the files and the semaphores opened by the parent process. Hence we need to copy the entries of the per-process resource table of the parent to the child. We will discuss files and semaphores in later stages. (There is a little bit more book keeping work associated with files and semaphores. Since we have not added files or semaphores so far to the OS, we will skip this work for the time being and complete the pending tasks in later stages).
+//Copy the per-process disk map table of the parent to the child. This will ensure that the disk block numbers of the code pages of the parent process are copied to the child. Further, if the parent has swapped out heap pages, those will be shared by the child. (This will be explained in detail in a later stage). The eXpOS design guarentees that the stack pages and the user area page of a process will not be swapped at the time when it invokes the fork system call. Hence the disk map table entries of the parent process corresponding to the stack and user area pages will be invalid, and these entries of the child too must be set to invalid. 
+////////Copying per process disk table from parent to the child
+alias cnter R4;
+cnter = 0;
+while (cnter < 10) do
+	[DISK_MAP_TABLE + childpid * 10 + cnter] = [DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + cnter];
+	cnter = cnter + 1;
+endwhile;
+/////////Copying per process resource table
+cnter = 0;
+while (cnter < 16) do
+	if ((cnter % 2) == 0) then
+		if ([([PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] + 1) * 512 - 16 + cnter] == SEMAPHORE) then
+			alias semIndex R5;
+			semIndex = [([PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] + 1) * 512 - 16 + cnter + 1];
+			[SEMAPHORE_TABLE + (semIndex * 4) + 1] = [SEMAPHORE_TABLE + (semIndex * 4) + 1] + 1;
+		endif;
+	endif;
+	[(upg + 1) * 512 - 16 + cnter] = [([PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] + 1) * 512 - 16 + cnter];
+	cnter = cnter + 1;
+endwhile;
+//Initialize the page table of the child process. As heap, code and library pages are shared by the parent process and the child process, copy these entries (page number and auxiliary information) form the page table of the parent to the child. For each page shared, increment the corresponding share count in the memory free list. Initialize the stack page entries in the page table with the new memory page numbers obtained earlier. Note that the auxiliary information for the stack pages is same for both parent and child. Copy content of the user stack pages of the parent to the user stack pages of the child word by word.
+cnter = 0;
+while (cnter < 16) do
+	[PAGE_TABLE_BASE + childpid * 20 + cnter] = [PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20 + cnter];
+	if (((cnter % 2) == 0) && ([PAGE_TABLE_BASE + childpid * 20 + cnter] != -1)) then
+		[MEMORY_FREE_LIST + [PAGE_TABLE_BASE + childpid * 20 + cnter]] = [MEMORY_FREE_LIST + [PAGE_TABLE_BASE + childpid * 20 + cnter]] + 1;
+	endif;
+	cnter = cnter + 1;
+endwhile;
+[PAGE_TABLE_BASE + childpid * 20 + 16] = s1;
+[PAGE_TABLE_BASE + childpid * 20 + 17] = "0110";
+[PAGE_TABLE_BASE + childpid * 20 + 18] = s2;
+[PAGE_TABLE_BASE + childpid * 20 + 19] = "0110";
+cnter = 0;
+alias ps R5;
+ps = [PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20 + 16];
+while (cnter < 512) do
+	[s1 * 512 + cnter] = [ps * 512 + cnter];
+	cnter = cnter + 1;
+endwhile;
+cnter = 0;
+ps = [PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20 + 18];
+while (cnter < 512) do
+	[s2 * 512 + cnter] = [ps * 512 + cnter];
+	cnter = cnter + 1;
+endwhile;
+//////////////////////////////////
+[upg * 512] = BP;
+//////////////////////////////////
+alias physicalAddrRetVal1 R6;
+alias physicalAddrRetVal2 R7;
+physicalAddrRetVal1 = ([PTBR + 2 * ((userSP - 1) / 512)] * 512) + ((userSP - 1) % 512);
+[physicalAddrRetVal1] = childpid;
+physicalAddrRetVal2 = ([PAGE_TABLE_BASE + childpid * 20 + 2 * ((userSP - 1) / 512)] * 512) + ((userSP - 1) % 512);
+[physicalAddrRetVal2] = 0;
+SP = userSP;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+ireturn;

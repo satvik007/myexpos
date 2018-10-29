@@ -4,6 +4,40 @@ alias functionNum R1;
 alias pid R2;
 alias retVal R0;
 
+// Get PCB entry 
+// takes nothing
+// returns pid.
+if (functionNum == 1) then
+    alias iter R9;
+    iter = 1;
+    // loop through the Process Table
+    while (iter < MAX_PROC_NUM) do
+        if ([PROCESS_TABLE + 16 * iter + 4] == TERMINATED) then
+            break;
+        endif;
+        iter = iter + 1;
+    endwhile;
+
+    // If no process table entry is free, it returns -1
+    if (iter == MAX_PROC_NUM) then
+        retVal = -1;
+        return;
+    endif;
+
+    //  Set the PID to index of the entry
+    // Set the STATE to (ALLOCATED, - )
+    // Set PTBR to PAGE_TABLE_BASE + 20*index  /* See Memory Organisation */
+    // Set PTLR to 10. 
+    [PROCESS_TABLE + 16 * iter + 1] = iter;
+    [PROCESS_TABLE + 16 * iter + 4] = 12; // ALLOCATED
+    [PROCESS_TABLE + 16 * iter + 14] = PAGE_TABLE_BASE + iter * 16;
+    [PROCESS_TABLE + 16 * iter + 15] = 10;
+
+    R0 = iter;
+    return;
+
+endif;
+
 // Free User Area Page	
 if (functionNum == 2) then
 

@@ -1,0 +1,85 @@
+//////////////////////Memory Manager
+alias functionNum R1;
+if (functionNum == 1) then  // get free page
+	[SYSTEM_STATUS_TABLE + 3] = [SYSTEM_STATUS_TABLE + 3] + 1;
+	while ([SYSTEM_STATUS_TABLE + 2] == 0) do
+		[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 4] = WAIT_MEM;
+		call MOD_5;
+	endwhile;
+	[SYSTEM_STATUS_TABLE + 3] = [SYSTEM_STATUS_TABLE + 3] - 1;
+	[SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] - 1;
+	multipush (R2, R3);
+	alias cnter R2;
+	cnter = 76;
+	alias found R3;
+	found = -1;
+	while (cnter < 128) do
+		if ([MEMORY_FREE_LIST + cnter] == 0) then
+			found = cnter;
+			break;
+		endif;
+		cnter = cnter + 1;
+	endwhile;
+	[MEMORY_FREE_LIST + found] = 1;
+	R0 = found;
+	multipop (R2, R3);
+	return;
+endif;
+if (functionNum == 2) then  // release page
+	alias pgnumber R2;
+	[MEMORY_FREE_LIST + pgnumber] = [MEMORY_FREE_LIST + pgnumber] - 1;
+	if ([MEMORY_FREE_LIST + pgnumber] == 0) then
+		[SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] + 1;	
+	endif;
+	return;
+endif;
+if (functionNum == 4) then  // Release Block
+	alias bnumber R2;
+	alias pid R3;
+	[DISK_FREE_LIST + bnumber] = [DISK_FREE_LIST + bnumber] - 1;
+	return;
+endif;
+if (functionNum == 5) then  // get code page
+	alias bnumber R2;
+	multipush (R3, R4, R5, R6, R7);
+	alias cnter R3;
+	alias at R4; 
+	alias cnter2 R5;
+	alias pnumber R7;
+	cnter = 0;
+
+	while (cnter < 16) do   // cnter is pid
+		at = DISK_MAP_TABLE + cnter * 10;
+		cnter2 = 4;
+		while (cnter2 < 8) do
+			pnumber = [PAGE_TABLE_BASE + cnter * 20 + 2 * cnter2]; 
+			if (([at + cnter2] == bnumber) && (pnumber != -1)) then
+				[MEMORY_FREE_LIST + pnumber] = [MEMORY_FREE_LIST + pnumber] + 1;		
+				R0 = pnumber;
+				multipop (R3, R4, R5, R6, R7);
+				return;
+				break;
+			endif;
+			cnter2 = cnter2 + 1;
+		endwhile;
+		cnter = cnter + 1;
+	endwhile;
+	multipop (R3, R4, R5, R6, R7);
+	multipush (R1, R2, R3);
+	R1 = 1;
+	call MOD_2;
+	multipop (R1, R2, R3);
+	// R0 has the requisite value
+	R6 = R0;
+	multipush (R1, R2, R3, R4, R5, R6); // disk load
+	R5 = R2;
+	R1 = 2;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	R3 = R0;
+	R4 = R5;
+	call MOD_4;
+	multipop (R1, R2, R3, R4, R5, R6);
+	R0 = R6;
+	return;
+endif;
+return;

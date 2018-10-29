@@ -1,5 +1,8 @@
 // Memory Manager Module
 
+// print "mod 2";
+// print R1;
+
 alias functionNum R1;
 
 // Get Free Page
@@ -94,11 +97,11 @@ if (functionNum == 5) then
     // entry is valid then return the memory page number. Also increment the memory free list entry of that page.
     while (i < MAX_PROC_NUM) do
         if ([PROCESS_TABLE + i * 16 + 1] == i && i != pid) then
-            j = 0;
-            while (j < 10) do
-                if ([DISK_MAP_TABLE + i * 10 + j] == block && [PTBR + i * 20 + j] != -1) then
-                    [MEMORY_FREE_LIST + [PTBR + i * 20 + j]] = [MEMORY_FREE_LIST + [PTBR + i * 20 + j]] + 1;
-                    R0 = [PTBR + i * 20 + j];
+            j = 4;
+            while (j < 8) do
+                if ([DISK_MAP_TABLE + i * 10 + j] == block && [PAGE_TABLE_BASE + i * 20 + 2 * j] != -1) then
+                    [MEMORY_FREE_LIST + [PAGE_TABLE_BASE + i * 20 + 2 * j]] = [MEMORY_FREE_LIST + [PAGE_TABLE_BASE + i * 20 + 2 * j]] + 1;
+                    R0 = [PAGE_TABLE_BASE + i * 20 + 2 * j];
                     print i;
                     print j;
                     return;

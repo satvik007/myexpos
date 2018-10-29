@@ -1,0 +1,145 @@
+//////////////Process Manager
+alias functionNum R1;
+if (functionNum == 1) then  // Get PCB entry
+	multipush (R2, R3, R4);
+	alias cnter R2;
+	cnter = 0;
+	while (cnter < 16) do  // See which entry is free
+		if ([PROCESS_TABLE + 4 + cnter * 16] == TERMINATED) then
+			[PROCESS_TABLE + 4 + cnter * 16] = CREATED;  // state
+			[PROCESS_TABLE + 1 + cnter * 16] = cnter;  // pid
+			[PROCESS_TABLE + 15 + cnter * 16] = 10; // ptlr
+			[PROCESS_TABLE + 14 + cnter * 16] = PAGE_TABLE_BASE + 20 * cnter;  // ptbr
+			R0 = cnter;
+			multipop (R2, R3, R4);
+			return;
+			break;	 // Sanity :)
+		endif;
+		cnter = cnter + 1;
+	endwhile;
+	multipop (R2, R3, R4);	
+	R0 = -1;  // Not available
+	return;
+endif;
+if (functionNum == 2) then  // free user area page
+	alias currentPID R2;
+	multipush (R3);
+	alias upgnumber R3;
+	upgnumber = [PROCESS_TABLE + currentPID * 16 + 11];
+	alias perProcessTable R4;
+	perProcessTable = ([PROCESS_TABLE + (currentPID * 16) + 11] + 1) * 512 - 16;	
+	alias cnter R5;
+	cnter = 0;
+	while (cnter < 7) do
+		if ([perProcessTable + 2 * cnter] == SEMAPHORE) then
+			multipush (R1, R2, R3, R4, R5);
+			R1 = 7;
+			R3 = currentPID;
+			R2 = [perProcessTable + 2 * cnter + 1];
+			call MOD_0;
+			multipop (R1, R2, R3, R4, R5);
+		endif;
+		cnter = cnter + 1;
+	endwhile;
+	multipush (R1, R2, R3);
+	R1 = 2;
+	R2 = upgnumber;
+	call MOD_2;
+	multipop (R1, R2, R3);
+	multipop (R3);
+	return;
+endif;
+if (functionNum == 3) then  // exit process
+	alias currentPID R2;
+	multipush (R1, R2, R3);
+	if ([PROCESS_TABLE + currentPID * 16 + 9] != 9) then
+		alias cnter R1;  // dont modify R2...
+		cnter = 0;
+		while (cnter < 16) do
+			if ([PROCESS_TABLE + cnter * 16 + 4] == WAIT_PROCESS && [PROCESS_TABLE + cnter * 16 + 5] == currentPID) then
+				[PROCESS_TABLE + cnter * 16 + 4] = READY;
+				[PROCESS_TABLE + cnter * 16 + 5] = 0;
+				// next word is not updated (assumption)
+			endif;
+			if ([PROCESS_TABLE + cnter * 16 + 2] == currentPID) then
+				[PROCESS_TABLE + cnter * 16 + 2] = -1;	
+			endif;
+			cnter = cnter + 1;
+		endwhile;
+	endif;
+	multipop (R1, R2, R3);
+	multipush (R1, R2, R3);
+	R1 = 4;  // free page table
+	// R2 has already current PID
+	call MOD_1;
+	multipop (R1, R2, R3);
+	multipush (R1, R2, R3);
+	R1 = 2;   // free user area page
+	// R2 already has current PID
+	call MOD_1;
+	multipop (R1, R2, R3);
+	
+	[PROCESS_TABLE + currentPID * 16 + 4] = TERMINATED;
+	return;
+endif;
+if (functionNum == 4) then  // free page table
+	alias currentPID R2;
+	///////////////mod of stage 19////////////////
+	///1) Go through the heap and stack entries in the disk map table of the process with given PID. If any valid entries are found, invoke the Release Block function in the memory manager module.
+    ///2) Invalidate all the entries of the disk map table. 
+	multipush (R1, R2, R3, R4);  
+	alias cnter R3;
+	cnter = 2;
+	alias dt R4;
+	dt = DISK_MAP_TABLE + currentPID * 10; 
+	while (cnter < 10) do
+		if (cnter == 4) then
+			cnter = 8;
+			continue;
+		endif;
+		if ([dt + cnter] != -1) then
+			multipush (R1, R2, R3, R4); 
+			R1 = 4;
+			R3 = R2;
+			R2 = [dt + cnter];
+			call MOD_2;
+			multipop (R1, R2, R3, R4); 
+		endif;
+		cnter = cnter + 1;
+	endwhile;
+	cnter = 0;
+	while (cnter < 10) do
+		[dt + cnter] = -1;
+		cnter = cnter + 1;
+	endwhile;
+	multipop (R1, R2, R3, R4);
+	///////////////end////////////////
+	multipush (R4);
+	alias bptbr R4;
+	bptbr = PTBR;
+	PTBR = [PROCESS_TABLE + currentPID * 16 + 14];	
+	//Library
+	[PTBR+0] = -1;
+	[PTBR+1] = "0000";
+	[PTBR+2] = -1;
+	[PTBR+3] = "0000";
+	multipush (R3);
+	cnter = 4;
+	while (cnter < 20) do
+		if ([PTBR + cnter] != -1) then
+			multipush (R1, R2, R3, R4, R5);
+			R1 = 2;
+			R2 = [PTBR + cnter];
+			call MOD_2;  // release page
+			multipop (R1, R2, R3, R4, R5);
+			[PTBR + cnter] = -1;
+			[PTBR + cnter + 1] = "0000";
+		endif;
+		cnter = cnter + 2;
+	endwhile;
+	PTBR = bptbr;
+	multipop (R3);
+	multipop (R4);
+	return;
+endif;
+return;

@@ -1,0 +1,38 @@
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 9] = -1;  // mode flag to -1 indicating exception handler
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP; // saving sp to uptr (sp had logical value)
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1; // switching to kernal stack
+backup;
+multipush (EIP);
+// if the cause of the exception is other than page fault or if the user stack is full, the return address can't be pushed onto the stack), then print a meaningful error message. Then invoke the Exit Process function to halt the process and invoke the scheduler. 
+if ((EC != 0) || ([PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] == PTLR * 512 -1)) then
+	print ("NOT_P_F");
+	R1 = 3;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	call MOD_1;
+	call MOD_5;
+	return;
+endif;
+if (EPN == 2 || EPN == 3) then  // page fault due to heap
+	alias pnumber R5;
+	R1 = 1;
+	call MOD_2;
+	pnumber = R0;
+	[PTBR + EPN * 2] = pnumber;
+	[PTBR + EPN * 2 + 1] = "1110";	
+else  // page fault due to code page
+	// load the code block and set the entries in page table
+	alias pnumber R5;
+	R1 = 5;
+	R2 = [DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + EPN];
+	call MOD_2;
+	pnumber = R0;
+	[PTBR + EPN * 2] = pnumber;
+	[PTBR + EPN * 2 + 1] = "1100";	
+endif;
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 0;  // resetting mode flag to 0 
+multipop (EIP);
+restore;
+SP = [PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+SP = SP + 1;
+[[PTBR + 2 * (SP / 512)] * 512 + (SP % 512)] = EIP;
+ireturn;
