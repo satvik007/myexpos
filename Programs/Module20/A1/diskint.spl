@@ -14,7 +14,7 @@ alias iter R4;
 iter = 1;
 while(iter < MAX_PROC_NUM) do
     alias state R5;
-    if(([PROCESS_TABLE + 16 * iter + 1] == iter) && ([PROCESS_TABLE + 16 * iter + 4] == WAIT_DISK)) then
+    if([PROCESS_TABLE + 16 * iter + 4] == WAIT_DISK) then
         [PROCESS_TABLE + 16 * iter + 4] = READY;
     endif;
     iter = iter + 1;
@@ -25,8 +25,5 @@ restore;
 
 SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
 [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
-
-print "disk";
-breakpoint;
 
 ireturn;
