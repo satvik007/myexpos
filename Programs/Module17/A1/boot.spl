@@ -25,12 +25,12 @@ while (cnter < 128) do
     cnter = cnter + 1;
 endwhile;   
 cnter = 0;
-while (cnter < 83) do
+while (cnter < 85) do
     [MEMORY_FREE_LIST + cnter] = 1;
     cnter = cnter + 1;
 endwhile;
 [SYSTEM_STATUS_TABLE + 3] = 0; 
-[SYSTEM_STATUS_TABLE + 2] = 45; 
+[SYSTEM_STATUS_TABLE + 2] = 43; 
 
 
 // Load Module 0 from disk pages 53 and 54 to memory pages 40 and 41.

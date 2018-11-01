@@ -32,13 +32,9 @@ if (functionNum == 1) then
         iter = iter + 1;
     endwhile;
 
-    if (iter == 128) then
-        print ("mem list fishy");
-    else 
-        // store the obtained free page number in R0 as return value.
-        [MEMORY_FREE_LIST + iter] = 1;
-        R0 = iter;
-    endif;
+    // store the obtained free page number in R0 as return value.
+    [MEMORY_FREE_LIST + iter] = 1;
+    R0 = iter;
     return;
 endif;
 
@@ -46,10 +42,12 @@ endif;
 if (functionNum == 2) then
 
     // The Page number to be released is present in R2.
-    [MEMORY_FREE_LIST + R2] = 0;
+    [MEMORY_FREE_LIST + R2] =  [MEMORY_FREE_LIST + R2] - 1;
 
-    // increment the MEM_FREE_COUNT in the system status table.
-    [SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] + 1;
+    if ([MEMORY_FREE_LIST + R2] == 0) then
+        // increment the MEM_FREE_COUNT in the system status table.
+        [SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] + 1;
+    endif;
 
     alias iter R4;
     iter = 1;

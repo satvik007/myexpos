@@ -48,10 +48,8 @@ else
     // Call the Exit Process function in process manager module to
     // deallocate the resources and pages of the current process.
     multipush(R0, R6, R8);
-    R0 = 0;
     R1 = 3;
     R2 = pid;
-    R3 = 0;
     call MOD_1;
     multipop(R0, R6, R8);
 
