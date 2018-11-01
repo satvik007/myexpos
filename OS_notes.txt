@@ -1055,6 +1055,51 @@ Set up return values in the user stacks of the parent and the child processes. S
 child process as return value to the parent and 0 as the return values to the child. Reset the MODE 
 FLAG of the parent process. Switch to the user stack of the parent process and return to the user mode.
 
+MODULE 21
+
+When a process executes the Wait system call, its execution is suspended till the process 
+whose PID is given as argument to Wait terminates or executes the Signal system call.
+The process that enters Wait sets its state to WAIT_PROCESS and invokes the scheduler.
+
+A process executes the Signal system call to wake up all the processes waiting for it.
+If a process terminates without invoking Signal, then Exit system call voluntarily 
+wakes up all the processes waiting for it.
+
+When process A issues the Wait system call with the PID of process B, it intends to wait
+until process B signals or terminates. When process B is done with the resource, it can 
+invoke the Signal system call to wake up process A. 
+
+Signals are memoryless. 
+
+We will modify the Exit Process function in the process manager module to wake up all 
+processes waiting for the terminating process.
+The Exit process function is invoked by the Exec system call as well. In this case, the 
+process waiting for the current process must not be woken up.
+
+Finally, all child processes become orphan processes and their PPID field is set to -1
+in the module function Exit Process. If Exit process is invoked from the Exec system 
+call, the children must not become orphans.
+
+The shell asks for a string. If it is "Shutdown", the program executes the Shutdown 
+system call to halt the OS. Otherwise, it forks and create a child process. The parent 
+process then waits for the child to exit using the Wait system call. The child process 
+will try to execute the command. If no such file exists, Exec fails and the child prints 
+"BAD COMMAND" and exits. Otherwise, the command file will be executed. In either case, upon 
+completion of the child process, the parent process wakes up.
+
+Interrupt routine 11
+
+Wait, Signal, Getpid and Getppid are all implemented in the interrupt routine 11. Each system
+call has different system call number.
+
+Extract the system call number from the user stack and switch to the kernel stack
+Implement system calls according to the system call number extracted from above step.
+
+Exit Process function is modified so that it wakes up all the processes waiting for the current process. 
+Similarly, the children of the process are set as orphan processes by changing PPID field of child processes to -1.
+But when the Exit Process function is invoked in the same address space and is executed with the same PID. When 
+Exit Process is invoked from Exec sys call, it should not wake up the processes waiting for the current process
+and also should not set the children as orphan processes. 
 
 
 
