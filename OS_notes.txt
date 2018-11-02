@@ -1102,4 +1102,63 @@ Exit Process is invoked from Exec sys call, it should not wake up the processes 
 and also should not set the children as orphan processes. 
 
 
+MODULE 22
+
+Semaphores are primitives that allow concurrent processes to handle the critical section problem. expOS provides
+binary semaphores which can be used by user programs to synchronize the access to the shared resources so that
+data inconsistency will not occur.
+
+There are 4 actions related to semaphores that a process can perform. 
+1. Acquiring a semaphore - Semget system call
+2. Releasing a semaphore - Semrelease system call
+3. Locking a semaphore - SemLock system call
+4. Unlocking a semaphore - SemUnLock system call
+
+To use a semaphore, first a process has to acquire a semaphore. When a process forks, the semaphores currently 
+acquired by a process is shared between the child and parent.
+A process can lock and unlock a semaphore only after acquiring the semaphore.
+
+The process can lock the semaphore when it needs to enter into the critical section. After exiting from the 
+critical section, the process unlocks the semaphore allowing other processes to enter the critical section.
+After the use of a semaphore is finished, a process can detach the semaphore by releasing the semaphore.
+
+A process maintains record of the semaphores acquired by it in its per-process resource table.
+expOS uses the data structure, semaphore table to manage semaphores. 
+Semaphore table is a global data structure which is used to store details of semaphores currently used by all 
+the processes. 
+
+The semaphore table has 32 (MAX_SEM_COUNT) entries. This means that only 32 semaphores can be used by all the 
+processes in the system at a time. Each entry in the semaphore table occupies 4 words of which the last 2 are 
+currently unused. 
+For each semaphore, the PROCESS COUNT field in it's semaphore table entry keeps track of the number of processes
+currently sharing the semaphore.
+If a process locks the semaphore, the LOCKING PID field is set to the PID of that process. LOCKING PID is set to
+-1 when the semaphore is not locked by any process.
+An invalid semaphore table entry is indicated by PROCESS_COUNT equal to 0.
+The SPL constant SEMAPHORE_TABLE gives the starting address.
+
+Per-Process resource table is stored in the last 16 words of the user area page of a process.
+Per-process resource table can store details of at most 8 resources at a time.
+Each per process resource table entry contains 2 words. The 1st field, called the Resource Identifier field, 
+indicates whether the entry corresponds to a file or a semaphore.
+
+For FILE (0) is used and for semaphore, SEMAPHORE(1) is used.
+
+The second field stores the index of the semaphore table entry if the resource is a semaphore.
+'
+1. Semget System Call 
+	Semget system call is used to acquire a new semaphore. Semget finds a free entry in the per-process resource
+	table. Semget then creates a new entry in the semaphore table by invoking the Acquire Semaphore function of 
+	resource manager module.
+	The index of the semaphore table entry returned by Acquire Semaphore function is stored in the free entry of 
+	per - process resource table of the processes. Finally, Semget system call returns the index of newly created 
+	entry in the per-process resource table as semaphore descriptor (SEMID).
+
+2. Semrelease System Call
+	takes SEMID as argument from user program. Semrelease system call is used to detach a semaphore from the process.
+	Semrelease releases the acquired semaphore and wakes up all the processes waiting for the semaphore by invoking 
+	the Release Semaphore function of resource manager module. Semrelease also invalidates the per-process resource 
+	table entry corresponding to the SEMID given as an argument.
+
+	
 
