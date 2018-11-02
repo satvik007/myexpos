@@ -68,4 +68,69 @@ if (functionNum == 9) then
     return;
 endif;
 
+// Acquire Semaphore
+// Acquires a semaphore and returns it's semaphore number. Assumes a valid PID is given as input. Returns -1 upon failure.
+if (functionNum == 6) then
+    alias iter R5;
+    iter = 0;
+    // Find the index of a free entry in Semaphore table. If no free entry, return -1.
+/* Free entry is indicated by a Process Count of 0. */ 
+    while (iter < MAX_SEM_COUNT) do
+        if ([SEMAPHORE_TABLE + 4 * iter + 1] == 0) then
+            break;
+        endif; 
+        iter = iter + 1;
+    endwhile;
+
+    //  If no free entry, return -1.
+    if (iter == MAX_SEM_COUNT) then
+        R0 = -1;
+        return;
+    endif;
+
+    // Set the PROCESS_COUNT to 1 and LOCKING_PID to -1.
+    [SEMAPHORE_TABLE + 4 * iter + 1] = 1;
+    [SEMAPHORE_TABLE + 4 * iter + 0] = -1;
+
+    // Return the Semaphore table index.   /* success */
+    R0 = iter;
+    return;
+
+endif;
+
+// Release Semaphore
+// Description : Releases a semaphore. Assumes a valid PID and semaphore table index are given as input.
+if (functionNum == 7) then
+    alias index R5;
+    alias pid R6;
+    alias iter R7;
+
+    index = R2;
+    pid = R3;
+
+    // If ( semaphore is locked by the current process)   /*Check the Locking PID in the Semaphore table*/
+    if ([SEMAPHORE_TABLE + 4 * index] != -1) then
+
+        // Set the Locking PID to -1.  /* Unlock the semaphore before release */
+        [SEMAPHORE_TABLE + 4 * index] = -1;
+
+        // loop through the process table{ /*wake up processes blocked by the semaphore */
+        iter = 0;
+        while (iter < MAX_PROC_NUM) do
+            // if (the process state is ( WAIT_SEMAPHORE, SEMTABLEINDEX ) ){
+            if([PROCESS_TABLE + 16 * iter + 4] == WAIT_SEMAPHORE && [PROCESS_TABLE + 16 * iter + 5] == index) then
+                //Set state of process as (READY , _ )
+                [PROCESS_TABLE + 16 * iter + 4] = READY;
+            endif;
+            iter = iter + 1;
+        endwhile;
+
+    endif; 
+
+    // Decrement the process count of the semaphore in the semaphore table.
+    // /* When the count becomes 0, the semaphore is free. */
+    [SEMAPHORE_TABLE + 4 * index + 1] = [SEMAPHORE_TABLE + 4 * index + 1] - 1;
+    return;
+endif;
+
 return;
