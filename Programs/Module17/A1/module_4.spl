@@ -42,6 +42,7 @@ if (functionNum == 4) then
     multipush(R0, R1, R2, R3);
     call MOD_5; // Invoke the scheduler.
     multipop(R0, R1, R2, R3);
+    
     R3 = [PTBR + 2 * (R3 / 512)] * 512 + (R3 % 512);
     [R3] = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 8];
     return;

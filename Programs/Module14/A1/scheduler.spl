@@ -34,7 +34,7 @@ while(curProcess != iter) do
 endwhile;
 
 // no process found, idle is scheduled.
-if(iter == curProcess) then
+if(iter == curProcess && [PROCESS_TABLE + 16 * iter + 4] != READY) then
     newProcess = 0;
 else newProcess = iter;
 endif;
