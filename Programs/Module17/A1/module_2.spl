@@ -8,11 +8,11 @@ if (functionNum == 1) then
     // Increment WAIT_MEM_COUNT field in the system status table.
     [SYSTEM_STATUS_TABLE + 3] = [SYSTEM_STATUS_TABLE + 3] + 1;
 
-    // Set the state of the invoked process as WAIT_MEM.
-    [PROCESS_TABLE + 16 * [SYSTEM_STATUS_TABLE + 1] + 4] = WAIT_MEM;
-
     // While memory is full (MEM_FREE_COUNT will be 0), do following.
     while ([SYSTEM_STATUS_TABLE + 2] == 0) do
+
+        // Set the state of the invoked process as WAIT_MEM.
+        [PROCESS_TABLE + 16 * [SYSTEM_STATUS_TABLE + 1] + 4] = WAIT_MEM;
 
         // Schedule other process by invoking the context switch module. // blocking the process
         multipush(R1, R2);
@@ -25,10 +25,10 @@ if (functionNum == 1) then
     [SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] - 1;
 
     alias iter R4;
-    iter = 0;
+    iter = 76;
 
     // Find a free page using memory free list and set the corresponding entry as 1
-    while (([MEMORY_FREE_LIST + iter] == 1) && iter < 128) do
+    while (([MEMORY_FREE_LIST + iter] != 0) && iter < 128) do
         iter = iter + 1;
     endwhile;
 
