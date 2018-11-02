@@ -23,6 +23,8 @@
 ./xfs-interface load --int=disk ../Programs/Module22/Main/diskint.xsm
 ./xfs-interface load --int=11 ../Programs/Module22/Main/int11.xsm
 ./xfs-interface load --int=15 ../Programs/Module22/Main/int15.xsm
+./xfs-interface load --int=13 ../Programs/Module22/Main/int13.xsm
+./xfs-interface load --int=14 ../Programs/Module22/Main/int14.xsm
 
 ./xfs-interface dump --inodeusertable
 mv inodeusertable.txt ../Programs/Module22/Main/inodeusertable.txt

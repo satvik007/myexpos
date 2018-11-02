@@ -17,3 +17,5 @@
 ./spl ../Programs/Module22/Main/int8.spl
 ./spl ../Programs/Module22/Main/int11.spl
 ./spl ../Programs/Module22/Main/int15.spl
+./spl ../Programs/Module22/Main/int13.spl
+./spl ../Programs/Module22/Main/int14.spl

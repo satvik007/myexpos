@@ -1160,5 +1160,24 @@ The second field stores the index of the semaphore table entry if the resource i
 	the Release Semaphore function of resource manager module. Semrelease also invalidates the per-process resource 
 	table entry corresponding to the SEMID given as an argument.
 
-	
+Implemenatation of INT 14
 
+The system calls SemLock and SemUnLock are implemented in the interrupt routine 14. SemLock and SemUnLock has
+system call numbers 19 and 20 respectively.
+
+1. SemLock System Call
+	takes a semaphore descriptor (SEMID) as an argument from user program. A process locks the semaphore it is 
+	sharing using the SemLock call. If the requested semaphore is currently locked by some other process, the current
+	process blocks its execution by changing its STATE to the tuple (WAIT_SEMAPHORE, semphore table index of requested 
+	semaphore) until the requested semaphore is ulocked. 
+	When the semaphore is unlocked, then STATE of the current process is made READY (by the process which has unlocked
+	the semaphore.)
+	When the current process is scheduled and the semaphore is still unlocked the current process locks the semaphore
+	by changing the LOCKING PID in the semaphore table entry to the PID of the current process. When the process is 
+	scheduled but finds that the semaphore is locked by some other process, current process again waits in the busy loop
+	until the requested semaphore is unlocked.
+
+2. SemUnLock System Call
+	SemUnLock system call takes a semphore descriptor (SEMID) as argument. A process invokes SemUnLock system call to
+	unlock the semphore. SemUnLock invalidates the LOCKING PID field (store -1) in the semaphore table entry for the 
+	semaphore. All the processes waiting for the semaphore are made READY for execution.

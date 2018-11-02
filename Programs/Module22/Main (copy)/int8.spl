@@ -14,7 +14,7 @@ oldProcess = PROCESS_TABLE + 16 * oldPid;
 SP = [oldProcess + 11] * 512 - 1;
 
 //setting the MODE flag in the process table of the calling process
-[oldProcess + 9] = 8;
+[oldProcess * 16 + 9] = 8;
 
 // To get a new PID for the child process, invoke the Get Pcb Entry function from the process manager module.
 multipush(R9, R11, R12);
@@ -117,7 +117,7 @@ else
     // Copy the per-process disk map table of the parent to the child.
     iter = 0;
     while (iter < 10) do
-        [DISK_MAP_TABLE + newPid * 10 + iter] = [DISK_MAP_TABLE + oldPid * 10 + iter];
+        [DISK_MAP_TABLE + newPid * 10 + iter] = [DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + iter];
         iter = iter + 1;
     endwhile;
 
@@ -125,7 +125,7 @@ else
     //stored in the last 16 entries of the userAreaPage)
     alias curResTable R3;
     alias newResTable R4;
-    alias counter R7;
+    alias counter R6;
     curResTable = ([oldProcess + 11] + 1) * 512 - 16;
     newResTable = ([newProcess + 11] + 1) * 512 - 16;
 
@@ -135,7 +135,7 @@ else
         [newResTable + counter + 1] = [curResTable + counter + 1];
         if([newResTable + counter] == SEMAPHORE) then
             //if the resource held is a semaphore update the corresponding count field in the semaphore table
-            alias semaphoreEntry R6;
+            alias semaphoreEntry R7;
             semaphoreEntry = SEMAPHORE_TABLE + 4 * [newResTable + counter + 1];
             [semaphoreEntry] = [semaphoreEntry] + 1;
         endif;
@@ -145,8 +145,6 @@ else
     // Initialize the page table of the child process.
     // As heap, code and library pages are shared by the parent process and the child process, copy these entries
     // heap already done.
-
-    alias iter R7;
 
     // library
     iter = 0;
