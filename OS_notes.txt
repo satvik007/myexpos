@@ -1201,5 +1201,90 @@ expOS File System and Implementation
 	3. Root File
 		Each file has an entry in the root file. The root file entry for a file contains filename, file size, 
 		file - type, user - name and access permissions. 
+		An application readable root file allows implementation of commands like "ls" as user mode 
+		programs.
+		The only data in the root file entry of a file that is not present in the inode table is the 
+		use name of the owner of the file. 
 
+	4. User Table
+		Contains names of each user who has an account in the system. The entry of a user in the user 
+		table consists of a) username and b) encrypted password. The OS assigns a user-id to each user.
+		The user-id of a user is the index of the user's entry in the user table. 
+		The first 2 entries of the table are (user-id 0 and 1) are reserved for special users kernel and 
+		root.
+
+		When a process executes the Create system call to create a file, Create system call looks up the
+		process table entry of the calling process to find the user-id of the process executing Create 
+		and sets the user-id field in the Inode table. The system call then looks up the user table entry
+		corresponding to the user-id and finds out the username and sets the user name field in the root
+		file entry created for the file.
+
+	When the OS is running, user processes can Open / Read / Write an already created file. When a file
+	is opened by a process using the Open system call, a new "open instance" is created. The OS keeps 
+	track of the number of open instances of a file at all times. If a file is opened multiple times, 
+	each Open call results in creation of a fresh open instance.
+
+	Associated with each open instance of a file, there is a seek pointer, which is initialized to the 
+	beginning of the file (value 0) by the Open system call. If a process opens a file and subsequently
+	invokes the Fork system call, the seek pointer is shared between the parent and the child. 
+	The seek pointer value can be modified using the Seek system call. 
+
+	To implement this OS maintains 2 global file data structures - the file status table and the open 
+	file table. For each process the OS maintains a per - process resource table, which contains 
+	information pertaining to the open instances of files of the particular process.
+
+	The OS further maintains a buffer cache which is user for caching data blocks of files in current
+	use. A buffer table is user to manage the data related to the buffer cache. 
+
+	1. File Status Table
+		contains an entry for each file in the FS. The index of a file's Inode table entry and file 
+		status table entry will be the same.
+		Purpose
+		1. To keep track of how many times each file has been opened using the open system call.
+		2. To provide a mechanism for processes to lock a file before making updates to the file's 
+			data / metadata.
+
+		Every time a file is opened by process using the Open system call, the file open count field in
+		the corresponding file status table entry is incremented. The table gives the global count of the
+		number of open instances of a file.
+
+		When a process enters a file system call and tries to access a file, the system call code must 
+		first lock access to the file to ensure that till the system call is completed, no other process
+		is allowed to execute any file system call that accesses the file's data / metadata.
+		The system call locks the file by setting locking Pid field of the file status table to the PID 
+		of the process executing the system call. Upon completion of the system call, the sytem call code
+		must unlock the file before returning to user mode. The Acquire Inode and Release Inode functions
+		of the Resource Manager Module are designed to handle file access regulation.
+
+	2. Open File Table
+		If a process opens a file using the Open sytem call and subsequently execute a Fork system call,
+		the open instance of the file is shared between the parent and the child. If the child further 
+		execute fork, more processes will share the same open instance. Hence, there must be a mechanism
+		to keep track of the count of processes sharing the same open instance of a file.
+
+		Whenever a file is opened by a process, an open file table entry is created for the open 
+		instance.
+		The entry contains 3 fields:
+		a) The index of the inode table of the file.
+		b) The count of the number of processes sharing the open instance, which will be set to 1 when 
+		the file is opened as only one process is sharing the open instance. 
+		c) The seek pointer for the open isntance is stored in the open file table.
+
+	4. Memory Buffer cache
+		Whenever a process tries to Read / Write into a file, the relevant block of the file is first 
+		brought into a disk buffer in memory and the read/ write is performed on the copy of the block
+		stored in the buffer. The OS maintains 4 memory buffer pages as cache.
+
+	5. Buffer Table
+		For managing the buffer cache. contains 1 entry per each buffer page. 
+
+		a) The block number of the disk block currently stored in the buffer page. If the buffer is 
+			unallocated, the disk block number is set to -1.
+		b) A flag indicating whether the block was modified after loading (dirty).
+		c) The PID of the process that has locked the buffer page (-1 if no process has locked the 
+			buffer)
+
+		When a process tries to do read / write into certain data block of a file using Read / Write
+		system call, the system call must first determine the buffer number to which the block must be 
+		loaded  and lock the buffer before initiating disk to buffer data transfer. 
 	
