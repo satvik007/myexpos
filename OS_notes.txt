@@ -1181,3 +1181,25 @@ system call numbers 19 and 20 respectively.
 	SemUnLock system call takes a semphore descriptor (SEMID) as argument. A process invokes SemUnLock system call to
 	unlock the semphore. SemUnLock invalidates the LOCKING PID field (store -1) in the semaphore table entry for the 
 	semaphore. All the processes waiting for the semaphore are made READY for execution.
+
+
+MODULE 23
+
+expOS File System and Implementation
+	2. INODE TABLE 
+		When a file is created by the Create system call, no disk blocks are allocated for the file, and only an
+		
+		Inode entry is created. Hence the file size will be set to 0 initially. Filename and access permissions are 
+		supplied as arguments to Create system call and are set accordingly.
+		
+		The user-id of the process executing Create system call will set as the owner of the file. 
+		
+		A file can be created with Exclusive Access / Open Access permission. The access permission is given as an
+		argument to Create system call. If a file is created with exclusive access, the Delete and Write system calls
+		must fail if executed by any process whose user-id is not equal to root, or the owner of the file.
+
+	3. Root File
+		Each file has an entry in the root file. The root file entry for a file contains filename, file size, 
+		file - type, user - name and access permissions. 
+
+	
