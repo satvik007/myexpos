@@ -19,3 +19,5 @@
 ./spl ../Programs/Module22/Main/int15.spl
 ./spl ../Programs/Module22/Main/int13.spl
 ./spl ../Programs/Module22/Main/int14.spl
+./spl ../Programs/Module22/Main/exe_handler.spl
+
