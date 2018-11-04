@@ -1,0 +1,37 @@
+// File Manager
+
+alias functionNum R1;
+
+// Open	
+// File Name
+// File Table Index, -1 or -2
+if (functionNum == 3) then
+	alias iter R5;
+	alias inode_index R6;
+	alias fileName R2;
+	iter = 0;
+	inode_index = -1;
+
+	// Find the index of the Inode Table entry of the file. If the entry is not found, return -1.
+	while (iter < MAX_FILE_NUM) do
+		if ([INODE_TABLE + 16 * iter + 1] == fileName) then
+			inode_index = iter;
+			break;
+		endif;
+		iter = iter + 1;
+	endwhile;	
+
+	if (inode_index == -1) then
+		R0 = -1;
+		return;
+	endif;
+
+	
+
+
+
+endif;
+
+if (functionNum == 4) then
+
+endif;

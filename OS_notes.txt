@@ -1290,5 +1290,62 @@ expOS File System and Implementation
 	
 MODULE 24
 
+1. Open system call
+	Open system call takes a filename as an argument from the user program. To perform read / write operations on a file,
+	a process must open the file first. Open system call creates a new open instance for the file and returns a file 
+	descriptor (index of the new per - process resource table entry created for the open instance.)
+	Further operations on the open instance are performed using this file descriptor. A process can open a file several 
+	times and each time a different open instance (and new descriptor) is created. The gloabal data structure, Open file 
+	table keeps track of all the open file instances in the system. 
+	File Status table is a global data structure that maintains an entry for every file in the system.
 
+	Open system call creates new entries for the file to be opened in the per-process resource table and the open file table.
+	A process keeps track of an open instance by storing the index of the open file table entry of the instance in resource
+	table entry. When a file is opened, the OPEN INSTANCE COUNT in the open file table is set to 1 and seek position is 
+	initialized to the starting of the file (0)
+
+	Each time when a file is opened, the FILE OPEN COUNT in the file status table entry for the file is incremented by one.
+	Open system call invokes Open function of file manager module to deal with global data structures - file status table and
+	open file table. 
+	When a process executes a Fork system call, the open instances of files (and semaphores) created by the process are shared
+	between the current process and its child.
+	As an effect of Fork, the OPEN INSTANCE COUNT in the open file table entry corresponding to the open instance is incremented
+	by one.
+
+	FILE OPEN COUNT (in the file status table) 
+	OPEN INSTANCE COUNT (in the open file table)
+	Former keeps track of the global count of how many times Open System call has been invoked with each file in the system - 
+	that is the number of open instances of a file at a given point of time.
+	This count is decremented each time when a Close is invoked on the file by any process. Each open instance could be further
+	shared between multiple processes. OPEN INSTANCE COUNT value of a particular open instance essentially keeps track of 
+	this "share count".
+
+2. Close system call
+	Close system call takes a file descriptor (per - process resource table entry) as argument from the user program. Close
+	system call invalidates the per - process resource table entry by storing -1 in the Resource Identifier field. To 
+	decrement share count of the opne instance in the open file table and update the file status table accordingly, Close 
+	function of file manager module is invoked by the Close system call.
+
+3. Open 
+	Open function is invoked by Open system call to update the file status table and open file table when a file is opened.
+	Open takes a file name as an argument. This function locates the inode index for the file in the inode table and locks 
+	the inode before processing further. Acquire Inode function of resource manager module is invoked to lock the file.
+	Locking the file is necessary to make sure that no other process tries to delete the file concurrently. Open function
+	creates a new entry in the open file table and returns the index of this entry to the caller.
+	All the fields of the open file table entry are initialized. In case the file is "root" file, INODE INDEX field is 
+	initialized to the INODE_ROOT(0).
+	Open function increments the FILE OPEN COUNT field by one in the file status table entry for the file, except if the 
+	file is "root" file. 
+	The lock on the file is released by invoking Release Inode function of resource manager module before returning to the 
+	caller.
+
+4. Close 
+	Close function is invoked by the Close system call to update the file status table and the open file table when a file is 
+	closed. Close takes an open file table index as argument. Close function decrements the share count (OPEN INSTANCE COUNT field
+	in the open file table entry) as the process no longer shares the open instance of the file. When the share count becomes zero,
+	this indicates that all processes sharing that open instance of the file have closed the file.
+	Open file table entry corresponding to that open instance of the file is invalidated by setting the INODE INDEX field to
+	-1 and the open count of the file (FILE OPEN COUNT field in file status table entry) is decremented.
+
+	
 
