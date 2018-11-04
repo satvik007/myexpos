@@ -20,4 +20,5 @@
 ./spl ../Programs/Module23/Main/int13.spl
 ./spl ../Programs/Module23/Main/int14.spl
 ./spl ../Programs/Module23/Main/exe_handler.spl
+./spl ../Programs/Module23/Main/int4.spl
 
