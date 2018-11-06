@@ -40,10 +40,10 @@ while(curProcess != iter) do
     endif;
 endwhile;
 
-if (curProcess == 0 && other == 0) then
-    breakpoint;
-    halt;
-endif;
+// if (curProcess == 0 && other == 0) then
+//     breakpoint;
+//     halt;
+// endif;
 
 // no process found, idle is scheduled.
 if(iter == curProcess && [PROCESS_TABLE + 16 * iter + 4] != READY) then

@@ -26,12 +26,121 @@ if (functionNum == 3) then
 		return;
 	endif;
 
-	
+	// Call the acquire_inode() function in the Resource Manager module.   /* Lock the inode */
+	alias pid R7;
+	pid = [SYSTEM_STATUS_TABLE + 1];
 
+	multipush(R1, R2, R5, R6, R7);
+	R1 = 4;
+	R2 = inode_index;
+	R3 = pid;
+	call MOD_0;
+	multipop(R1, R2, R5, R6, R7);
 
+	// If the locking fails, return -1. 
+	if (R0 == -1) then
+		return;
+	endif;
 
+	// If the file is of type EXEC, release_inode() and return -1. 	/* Only data files can be opened */
+	if ([INODE_TABLE + 16 * inode_index] == EXEC) then
+		multipush(R1, R2, R5, R6, R7);
+		R1 = 5;
+		R2 = inode_index;
+		R3 = pid;
+		call MOD_0;
+		multipop(R1, R2, R5, R6, R7);
+		R0 = -1;
+		return;
+	endif;
+
+	// Find a free entry in the Open File Table.
+	iter = 0;
+	while (iter < MAX_OPENFILE_NUM) do
+		if ([OPEN_FILE_TABLE + 4 * iter] == -1) then
+			break;
+		endif;
+		iter = iter + 1;
+	endwhile;	
+
+	// If there are no free entries, release_inode() and return -2.  /* Reached maximum number of open files in the system. */
+	if (iter == MAX_OPENFILE_NUM) then
+		multipush(R1, R2, R5, R6, R7);
+		R1 = 5;
+		R2 = inode_index;
+		R3 = pid;
+		call MOD_0;
+		multipop(R1, R2, R5, R6, R7);
+		R0 = -2;
+		return;
+	endif;
+
+	// If the file name is "root" then 
+	if ([fileName == "root"]) then
+		// Set the INODE INDEX field in the open file table entry to INODE_ROOT.
+		[OPEN_FILE_TABLE + 4 * iter] = INODE_ROOT;
+	else 
+		// In the File Status Table, if the File Open Count is -1, set it to 1. Otherwise, increment the File Open Count.
+		alias fileStatus R8;
+		fileStatus = FILE_STATUS_TABLE + 4 * inode_index;
+		if ([fileStatus + 1] == -1) then
+			[fileStatus + 1] = 1;
+		else 
+			[fileStatus + 1] = [fileStatus + 1] + 1;
+		endif;
+		// Set the INODE INDEX field in the open file table entry to the inode table index of the file.
+		[OPEN_FILE_TABLE + 4 * iter] = inode_index;
+	endif;
+
+	// Set the OPEN INSTANCE COUNT to 1 and LSEEK to 0 in the open file table entry.
+	[OPEN_FILE_TABLE + 4 * iter + 1] = 1;
+	[OPEN_FILE_TABLE + 4 * iter + 2] = 0;
+
+	// Call the release_inode() function in the Resource Manager module.   /* Free the inode */
+	multipush(R1, R2, R5, R6, R7);
+	R1 = 5;
+	R2 = inode_index;
+	R3 = pid;
+	call MOD_0;
+	multipop(R1, R2, R5, R6, R7);
+
+	// return the Open File Table Index.
+	R0 = iter;
+	return;
 endif;
 
+// Close	
+// File Table Index	
+// NIL
 if (functionNum == 4) then
+	alias file_index R5;
+	alias inode_index R6;
+	alias file_table R7;
+	file_table = OPEN_FILE_TABLE + 4 * file_index;
+	// Find the index of the Inode Table entry of the file from the Open File Table.
+	inode_index = [file_table];
+	// In the Open File Table Entry, decrement the Open Instance Count.
+	[file_table + 1] = [file_table + 1] - 1;
 
+	// If the Open Instance Count becomes 0
+	if ([file_table + 1] == 0) then
+		// Invalidate the entry by setting all fields to -1.
+		[file_table] = -1;
+		[file_table + 1] = -1;
+		[file_table + 2] = -1;
+		// If the file is not the "root", decrement the File Open Count in the File (Inode) Status Table.
+		alias file_status R8;
+		file_status = FILE_STATUS_TABLE + 4 * inode_index;
+		if (inode_index != 0) then
+			[file_status + 1] = [file_status + 1] - 1;
+		endif;
+		// If the File Open Count in File Status Table becomes 0, set it to -1.
+		if ([file_status + 1] == 0) then
+			[file_status + 1] = -1;
+		endif;
+	endif;
+
+	return;
 endif;
+
+return;
