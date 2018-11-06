@@ -61,6 +61,14 @@ if (functionNum == 2) then
             call MOD_0;
             multipop(R1, R2, R3, R4, R5);
         endif;
+        // then invoke the Close function of the file manager module.
+        if ([ResTable + counter] == FILE) then
+            multipush(R1, R2, R3, R4, R5);
+            R1 = 4;
+            R2 = [ResTable + counter + 1];
+            call MOD_3;
+            multipop(R1, R2, R3, R4, R5);
+        endif;
         //  Invalidate the resource table entry.
         [ResTable + counter] = -1;
         counter = counter + 2;
@@ -185,8 +193,6 @@ if (functionNum == 4) then
         [DISK_MAP_TABLE + pid * 10 + iter] = -1;
         iter = iter + 1;
     endwhile;
-
-
 
     return;
 

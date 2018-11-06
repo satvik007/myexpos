@@ -140,6 +140,12 @@ else
             semaphoreEntry = SEMAPHORE_TABLE + 4 * [newResTable + counter + 1];
             [semaphoreEntry] = [semaphoreEntry] + 1;
         endif;
+        // If the resource is a file (check the Resource Identifier field in the per-process resource table), then using the open file table index, increment the OPEN INSTANCE COUNT field in the open file table entry.
+        if ([newResTable + counter] == FILE) then
+            alias fileEntry R6;
+            fileEntry = OPEN_FILE_TABLE + 4 * [newResTable + counter + 1] + 1;
+            [fileEntry] = [fileEntry] + 1;
+        endif;
         counter = counter + 2;
     endwhile;
     
