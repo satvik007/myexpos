@@ -2,13 +2,13 @@
 cp ./compile ../../../spl/
 chmod +x ../../../spl/compile
 cd ../../../spl/ && ./compile
-cd ../Programs/Module24/Main/
+cd ../Programs/Module24/A1/
 echo "spl compilation done"
 
 cp ./compile_expl ../../../expl/
 chmod +x ../../../expl/compile_expl
 cd ../../../expl/ && ./compile_expl
-cd ../Programs/Module24/Main/
+cd ../Programs/Module24/A1/
 echo "expl compilation done"
 
 cp ./xfs ../../../xfs-interface/
