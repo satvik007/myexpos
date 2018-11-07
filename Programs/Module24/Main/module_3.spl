@@ -141,7 +141,7 @@ if (functionNum == 3) then
 	endif;
 
 	// If the file name is "root" then 
-	if ([fileName == "root"]) then
+	if (fileName == "root") then
 		// Set the INODE INDEX field in the open file table entry to INODE_ROOT.
 		[OPEN_FILE_TABLE + 4 * iter] = INODE_ROOT;
 	else 

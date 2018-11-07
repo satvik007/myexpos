@@ -39,6 +39,7 @@ else
         ireturn;
     endif;
 
+    //breakpoint;
     // Locate the Per-Process Resource Table of the current process.
     alias resTableEntry R11;
     resTableEntry = [processTable + 11] * 512 + RESOURCE_TABLE_OFFSET + 2 * fileDescriptor;
@@ -58,7 +59,7 @@ else
     // Get the index of the Inode Table entry from the Open File Table entry.
     alias inode_index R13;
     inode_index = [OPEN_FILE_TABLE + fileTableEntry * 4];
-
+    
     // Acquire the Lock on the File by calling the acquire_inode() function in the Resource Manager module.
     multipush(R5, R6, R7, R8, R9, R10, R11, R12, R13);
     R1 = 4;
@@ -81,8 +82,8 @@ else
 
     // Get the physical address curresponding to the logical address of Memory Buffer address given as input.
     alias word R9;
-    word = [[PTBR + 2 * ((userSP - 3) / 512)] * 512 + ((userSP - 3) % 512)];
-    word = [[PTBR + 2 * (word / 512)] * 512 + (word % 512)];
+    R4 = [[PTBR + 2 * ((userSP - 3) / 512)] * 512 + ((userSP - 3) % 512)];
+    word = [PTBR + 2 * (R4 / 512)] * 512 + (R4 % 512);
 
     if (inode_index == INODE_ROOT) then
         // If the lseek value is equal to the root file size(480), release_inode() return -2.
@@ -132,14 +133,14 @@ else
         R2 = [INODE_TABLE + 16 * inode_index + 8 + (lseek / 512)];
         R3 = lseek % 512;
         R4 = word;
-        call MOD_0;
+        call MOD_3;
         multipop(R5, R6, R7, R8, R9, R10, R11, R12, R13, R14);
 
         // Increment the Lseek position in the Open File Table.
         [OPEN_FILE_TABLE + fileTableEntry * 4 + 2] = lseek + 1;
 
     endif;
-
+ 
     // Release the Lock on the File by calling the release_inode() function in the Resource Manager module.
     multipush(R5, R6, R7, R8, R9, R10, R11, R12, R13, R14);
     R1 = 5;

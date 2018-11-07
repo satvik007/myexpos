@@ -26,7 +26,7 @@ int main() {
     int n = 2048;
 
     for(int i = 1; i < n; i++) {
-        cout << i << " ";
+        cout << i << "\n";
     }
     
 
