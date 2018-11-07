@@ -2,6 +2,60 @@
 
 alias functionNum R1;
 
+// Acquire Buffer   
+// Buffer Number, PID  
+// NIL
+if (functionNum == 1) then
+    alias bufferNum R2;
+    alias pid R3;
+    // while ( Buffer is locked ){   /* Check the Locking PID field in the Buffer Status Table */
+    while ([BUFFER_TABLE + 4 * bufferNum + 2] != -1) do
+        // Set state of the process as ( WAIT_BUFFER , Buffer Number );
+        [PROCESS_TABLE + pid * 16 + 4] = WAIT_BUFFER;
+        [PROCESS_TABLE + pid * 16 + 5] = bufferNum;
+
+        //  Call the switch_context() function from the Scheduler Module.
+        multipush(R1, R2, R3);
+        call MOD_5;
+        multipop(R1, R2, R3);
+
+    endwhile;
+
+    // Lock the Buffer by setting the PID of the current process in the Locking PID field
+    [BUFFER_TABLE + 4 * bufferNum + 2] = pid;
+
+    return;
+endif;
+
+// Release Buffer   
+// Buffer Number, PID  
+// 0 or -1
+if (functionNum == 2) then
+    alias bufferNum R2;
+    alias pid R3;
+    // If PID given as input is not equal to the LOCKING PID in the Buffer Status Table, return -1.
+    if ([BUFFER_TABLE + 4 * bufferNum + 2] != pid) then
+        R0 = -1;
+        return;
+    endif;
+
+    // Free the lock in the the Buffer Status Table entry corresponding to the buffer Number; /* Set Locking PID field to -1 */
+    [BUFFER_TABLE + 4 * bufferNum + 2] = -1;
+
+    alias iter R4;
+    iter = 0;
+    // loop through the process table{ 
+    while (iter < MAX_PROC_NUM) do
+        // if (the process state is ( WAIT_BUFFER , Buffer Number ) ){
+        if ([PROCESS_TABLE + 16 * pid + 4] == WAIT_BUFFER && [PROCESS_TABLE + 16 * pid + 4] == bufferNum) then
+            // Set state of process as (READY , _ )
+            [PROCESS_TABLE + 16 * pid + 4] = READY;
+        endif;
+        iter = iter + 1;
+    endwhile;
+    R0 = 0;
+    return;
+endif;
 
 // Acquire Disk
 // takes pid.

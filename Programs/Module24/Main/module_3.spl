@@ -2,6 +2,71 @@
 
 alias functionNum R1;
 
+// Buffered Read
+// Disk Block Number, Offset, Memory Address
+// NIL
+if (functionNum == 2) then
+	alias blockNum R2;
+	alias offset R3;
+	alias word R4;
+	alias pid R5;
+	pid = [SYSTEM_STATUS_TABLE + 1];
+
+	// Acquire the buffer by calling the Acquire_Buffer() function in the Resource Manager module;
+	multipush(R1, R2, R3, R4, R5);
+	R1 = 1;
+	R2 = blockNum % 4; //  Identify the buffer /* Buffer Number = (Disk Number % 4) is a simple scheme, 
+	R3 = pid;
+	call MOD_0;
+	multipop(R1, R2, R3, R4, R5);
+
+	alias bufferEntry R6;
+	bufferEntry = BUFFER_TABLE + 4 * (blockNum % 4);
+	//  if (the buffer contains a different disk block){
+	if ([bufferEntry] != blockNum) then
+		// if (the buffer contents are dirty){
+		if ([bufferEntry + 1] == 1) then
+			// PID, Page Number, Block Number
+			// Write back the contents of the buffer to the disk by invoking disk_store() function in the device manager module;
+			multipush(R1, R2, R3, R4, R5, R6);
+			R1 = 1;
+			R3 = 71 + blockNum % 4;
+			R2 = pid
+			R4 = [bufferEntry];
+			call MOD_4;
+			multipop(R1, R2, R3, R4, R5, R6);
+			// Mark the buffer as clean in the corresponding buffer table entry;
+			[bufferEntry + 1] = 0;
+		endif;	
+
+		// Load the required disk block into the buffer by invoking the disk_load() function in the device manager module;
+		multipush(R1, R2, R3, R4, R5, R6);
+		R1 = 2;
+		R4 = blockNum;
+		R3 = 71 + blockNum % 4;
+		R2 = pid;
+		call MOD_4;
+		multipop(R1, R2, R3, R4, R5, R6);
+
+		// Set the new Disk block number in the Buffer table entry;
+		[bufferEntry] = blockNum;
+	endif;
+
+	// Copy the contents in the offset location in the buffer to the physical address given as input;
+	[word] = [(71 + blockNum % 4) * 512 + offset];
+
+	// Release the buffer by calling the Release_Buffer() function in the Resource Manager module;
+	multipush(R1, R2, R3, R4, R5, R6);
+	R1 = 2;
+	R2 = blockNum % 4;
+	R3 = pid;
+	call MOD_0;
+	multipop(R1, R2, R3, R4, R5, R6);
+
+	return;
+	
+endif;
+
 // Open	
 // File Name
 // File Table Index, -1 or -2

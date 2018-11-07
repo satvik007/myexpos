@@ -21,4 +21,7 @@
 ./spl ../Programs/Module24/Main/int14.spl
 ./spl ../Programs/Module24/Main/exe_handler.spl
 ./spl ../Programs/Module24/Main/int4.spl
+./spl ../Programs/Module24/Main/int5.spl
+./spl ../Programs/Module24/Main/module_3.spl
+
 

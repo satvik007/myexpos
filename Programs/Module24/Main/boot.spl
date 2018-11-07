@@ -1,3 +1,11 @@
+// Interrupt 5 Routine: Seek, Open, Close
+loadi (12, 25);
+loadi (13, 26);
+
+// Module 3: File Manager
+loadi (46, 59);
+loadi (47, 60);
+
 // Interrupt 4 Routine: Create, Delete
 loadi(10, 23);
 loadi(11, 24);
@@ -203,6 +211,14 @@ while (ctr < MAX_BUFFER) do
     [BUFFER_TABLE + ctr * 4 + 1] = 0;
     [BUFFER_TABLE + ctr * 4 + 0] = -1;
     [BUFFER_TABLE + ctr * 4 + 2] = -1;
+    ctr = ctr + 1;
+endwhile;
+
+// Initialize all entries of the open file table by setting INODE INDEX field to -1 and OPEN INSTANCE COUNT field to 0.
+ctr = 0;
+while (ctr < MAX_OPENFILE_NUM) do
+    [OPEN_FILE_TABLE + 4 * ctr] = -1;
+    [OPEN_FILE_TABLE + 4 * ctr + 1] = 0;
     ctr = ctr + 1;
 endwhile;
 
