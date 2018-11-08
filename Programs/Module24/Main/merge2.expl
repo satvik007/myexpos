@@ -1,151 +1,169 @@
+type
+    List
+    {
+        int data;
+        List next;
+    }
+    Share
+    {
+        List link;
+    }
+endtype
+
 decl
-    int store(str file, int start);
-    int merge(str out, str in1, str in2);
+  int x, semid;
+  List head;
+  List mergeSort(List top);
+  List merge(List a, List b);
 enddecl
 
-//Storing 512 numbers in file
-int store(str file, int start)
+List mergeSort(List top)
 {
   decl
-    int x, fp, counter, val;
+    int len, pid;
+    List slow, fast, a, b;
+    Share s;
   enddecl
 
   begin
-    //Create and open the file
-    x=exposcall("Create", file);
-    fp=exposcall("Open", file, 1);
+    len=1;
+    if((top!=null) AND (top.next!=null)) then
+      x=exposcall("SemLock", semid);
+      slow=top;
+      fast=top.next;
 
-    //Store the numbers into the file
-    counter=0;
-    while(counter<512) do
-      val=4*counter+start;
-      x=exposcall("Write", fp, val);
-      counter=counter+1;
-    endwhile;
+      //Divide the list into two parts
+      while(fast!=null) do
+        fast=fast.next;
+        len=len+1;
+        if(fast!=null) then
+          slow=slow.next;
+          fast=fast.next;
+          len=len+1;
+        endif;
+      endwhile;
 
-    //Close the file
-    x=exposcall("Close", fp);
+      a=top;
+      b=slow.next;
+      slow.next=null;
+      x=exposcall("SemUnLock", semid);
 
-    write("Stored");
-    return 0;
+      //If size less than 4, don't Fork
+      if(len<=4) then
+        a=mergeSort(a);
+        b=mergeSort(b);
+      else
+        x=exposcall("SemLock", semid);
+        s=alloc();
+        x=exposcall("SemUnLock", semid);
+
+        pid=exposcall("Fork");
+
+        //If Fork is not possible, do sequential
+        if(pid==-1) then
+          a=mergeSort(a);
+          b=mergeSort(b);
+        else
+          s.link=null;
+
+          //Sort from two different process
+          if(pid!=0) then
+            a=mergeSort(a);
+          else
+            b=mergeSort(b);
+            s.link=b;             //Store head in shared location
+            x=exposcall("Exit");
+          endif;
+          x=exposcall("Wait", pid);
+          b=s.link;
+        endif;
+
+        x=exposcall("SemLock", semid);
+        free(s);
+        x=exposcall("SemUnLock", semid);
+      endif;
+
+      //Merge the two lists
+      x=exposcall("SemLock", semid);
+      top=merge(a, b);
+      x=exposcall("SemUnLock", semid);
+    endif;
+
+    return top;
   end
 }
 
-//Merging files "in1" and "in2" into "out"
-int merge(str out, str in1, str in2)
+List merge(List a, List b)
 {
   decl
-    int fp, fp1, fp2;
-    int x, a, b, w1, w2;
+    List result;
   enddecl
 
   begin
-    //Create and open output file
-    x=exposcall("Create", out, 1);
-    fp=exposcall("Open", out);
+    result=null;
 
-    //Open both the input files
-    fp1=exposcall("Open", in1);
-    fp2=exposcall("Open", in2);
+    if(a==null) then
+      result=b;
+    endif;
+    if(b==null) then
+      result=a;
+    endif;
 
-    //Read the first number from both input files
-    //and store them in w1 and w2
-    a=exposcall("Read", fp1, w1);
-    b=exposcall("Read", fp2, w2);
-
-    //Store min(w1,w2) in output file and
-    //read the next number until one
-    //file reaches end of file
-    while(a!=-2 AND b!=-2) do
-      if(w1<=w2) then
-        x=exposcall("Write", fp, w1);
-        a=exposcall("Read", fp1, w1);
+    if(a!=null AND b!=null) then
+      if(a.data<=b.data) then
+        result=a;
+        result.next=merge(a.next, b);
       else
-        x=exposcall("Write", fp, w2);
-        b=exposcall("Read", fp2, w2);
+        result=b;
+        result.next=merge(a, b.next);
       endif;
-    endwhile;
+    endif;
 
-    //If second input file ends,
-    //copy the contents from first input file
-    //to the output file
-    while(a!=-2) do
-      x=exposcall("Write", fp, w1);
-      a=exposcall("Read", fp1, w1);
-    endwhile;
-
-    //If first input file ends,
-    //copy the contents from second input file
-    //to the output file
-    while(b!=-2) do
-      x=exposcall("Write", fp, w2);
-      b=exposcall("Read", fp2, w2);
-    endwhile;
-
-    //Close all the files
-    x=exposcall("Close", fp);
-    x=exposcall("Close", fp1);
-    x=exposcall("Close", fp2);
-
-    //Delete the input files
-    x=exposcall("Delete", in1);
-    x=exposcall("Delete", in2);
-
-    write("Merged");
-    return 0;
+    return result;
   end
 }
 
 int main()
 {
   decl
-    int x, pid1, pid2, fp;
+    int x, counter;
+    List p, q;
   enddecl
 
   begin
-    pid1=exposcall("Fork");
-    if(pid1!=0) then
-      pid2=exposcall("Fork");
-      if(pid2!=0) then
-        //Store the numbers into "temp1.dat"
-        x=store("temp1.dat", 1);
+    x = initialize();
+    semid = exposcall("Semget");
 
-        x=exposcall("Wait", pid2);
+    //Storing values in descending order
+    head=null;
+    counter=0;
+    while(counter<64) do
+      p=alloc();
+      p.data=64-counter;
+      p.next=null;
+
+      if(head==null) then
+        head=p;
+        q=p;
       else
-        //Store the numbers into "temp2.dat"
-        x=store("temp2.dat", 2);
-
-        x=exposcall("Exit");
+        q.next=p;
+        q=q.next;
       endif;
 
-      //Merge "temp1.dat" and "temp2.dat" into "tempa.dat"
-      x=merge("tempa.dat", "temp1.dat", "temp2.dat");
+      counter=counter+1;
+    endwhile;
 
-      x=exposcall("Wait", pid1);
-    else
-      pid2=exposcall("Fork");
-      if(pid2!=0) then
-        //Store the numbers into "temp3.dat"
-        x=store("temp3.dat", 3);
+    //Calling Merge Sort
+    head=mergeSort(head);
 
-        x=exposcall("Wait", pid2);
-      else
-        //Store the numbers into "temp4.dat"
-        x=store("temp4.dat", 4);
+    //Printing Values
+    p=head;
+    while(p!=null) do
+      write(p.data);
+      p=p.next;
+    endwhile;
 
-        x=exposcall("Exit");
-      endif;
-
-      //Merge "temp3.dat" and "temp4.dat" into "tempb.dat"
-      x=merge("tempb.dat", "temp3.dat", "temp4.dat");
-
-      x=exposcall("Exit");
-    endif;
-
-    //Merge "tempa.dat" and "tempb.dat" into "merge.dat"
-    //which contains numbers from 1 to 2048 in sorted order
-    x=merge("merge.dat", "tempa.dat", "tempb.dat");
-
+    x = exposcall("Semrelease");
     return 1;
   end
 }

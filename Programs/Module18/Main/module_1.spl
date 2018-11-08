@@ -29,7 +29,8 @@ if (functionNum == 3) then
     R1 = 4;
     R2 = pid;
     call MOD_1;
-    
+    multipop(R0, R1, R2, R3);
+    multipush(R0, R1, R2, R3);
     // Invoke the Free user Area Page function with the same PID to free the user area page.
     R1 = 2;
     R2 = pid;

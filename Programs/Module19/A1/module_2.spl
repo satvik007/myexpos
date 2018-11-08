@@ -75,7 +75,7 @@ endif;
 // blockNum, pid
 if (functionNum == 4) then
     alias blockNum R2;
-    [DISK_FREE_LIST + blockNum] = [DISK_FREE_LIST + blockNum] - 1;
+    [DISK_FREE_LIST + blockNum] = 0;
     return;
 
 endif;
@@ -102,8 +102,8 @@ if (functionNum == 5) then
                 if ([DISK_MAP_TABLE + i * 10 + j] == block && [PAGE_TABLE_BASE + i * 20 + 2 * j] != -1) then
                     [MEMORY_FREE_LIST + [PAGE_TABLE_BASE + i * 20 + 2 * j]] = [MEMORY_FREE_LIST + [PAGE_TABLE_BASE + i * 20 + 2 * j]] + 1;
                     R0 = [PAGE_TABLE_BASE + i * 20 + 2 * j];
-                    print i;
-                    print j;
+                    // print i;
+                    // print j;
                     return;
                 j = j + 1;
                 endif;  

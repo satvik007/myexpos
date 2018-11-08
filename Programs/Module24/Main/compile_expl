@@ -6,3 +6,5 @@ mv assemblycode.xsm ../Programs/Module24/Main/even.xsm
 mv assemblycode.xsm ../Programs/Module24/Main/idle.xsm
 ./expl ../Programs/Module24/Main/init.expl
 mv assemblycode.xsm ../Programs/Module24/Main/init.xsm
+./expl ../Programs/Module24/Main/chfile.expl
+mv assemblycode.xsm ../Programs/Module24/Main/chfile.xsm

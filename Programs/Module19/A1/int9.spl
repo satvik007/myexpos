@@ -134,6 +134,7 @@ else
         iter = iter + 1;
     endwhile;
 
+    [DISK_MAP_TABLE + pid * 10 + 4] = [INODE_TABLE + 16 * inode_index + 8];
     [DISK_MAP_TABLE + pid * 10 + 5] = [INODE_TABLE + 16 * inode_index + 9];
     [DISK_MAP_TABLE + pid * 10 + 6] = [INODE_TABLE + 16 * inode_index + 10];
     [DISK_MAP_TABLE + pid * 10 + 7] = [INODE_TABLE + 16 * inode_index + 11];

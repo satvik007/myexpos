@@ -25,7 +25,7 @@ if (syscall == 17) then
 
 	// Find the index of a free entry in the Per Process Resource Table.
 	while (iter < 8) do
-		if ([userPage + 512 - 16 + 2 * iter] == -1) then
+		if ([userPage * 512 + 512 - 16 + 2 * iter] == -1) then
 			break;
 		endif;
 		iter = iter + 1;
@@ -40,7 +40,7 @@ if (syscall == 17) then
 	endif;
 
 	// Resource Identifier field of the per-process resource table entry is set to 1 to indicate that the resource is a semaphore.
-	[userPage + 512 - 16 + 2 * iter] = 1;
+	[userPage * 512 + 512 - 16 + 2 * iter] = 1;
 
 	// Acquire a semaphore by calling the acquire_semaphore() function in the Resource Manager Module.
 	multipush(R5, R6, R7, R8, R9);
@@ -58,7 +58,7 @@ if (syscall == 17) then
 	endif;
 
 	//Store the index of the Semaphore table entry in the Per Process Resource Table entry.
-	[userPage + 512 - 16 + 2 * iter + 1] = R0;
+	[userPage * 512 + 512 - 16 + 2 * iter + 1] = R0;
 	[[PTBR + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = iter;
 
 endif;

@@ -64,6 +64,12 @@ if (EPN == 2 || EPN == 3) then
 	multipop(R3);
 	[PAGE_TABLE_BASE + 20 * pid + 2 * EPN] = R0;
 	[PAGE_TABLE_BASE + 20 * pid + 2 * EPN + 1] = "1110";
+	multipush(R3);
+	R1 = 1;
+	call MOD_2;
+	multipop(R3);
+	[PAGE_TABLE_BASE + 20 * pid + 2 * EPN + 2] = R0;
+	[PAGE_TABLE_BASE + 20 * pid + 2 * EPN + 3] = "1110";
 endif;
 
 multipop(EIP);

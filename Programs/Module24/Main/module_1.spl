@@ -163,6 +163,7 @@ if (functionNum == 4) then
         R1 = 4;
         R3 = R2;
         R2 = [DISK_MAP_TABLE + pid * 10 + 2];
+        call MOD_2;
         multipop(R0, R1, R2, R3, R6);
     endif;
     if ([DISK_MAP_TABLE + pid * 10 + 3] != -1) then
@@ -170,6 +171,7 @@ if (functionNum == 4) then
         R1 = 4;
         R3 = R2;
         R2 = [DISK_MAP_TABLE + pid * 10 + 3];
+        call MOD_2;
         multipop(R0, R1, R2, R3, R6);
     endif;
     if ([DISK_MAP_TABLE + pid * 10 + 8] != -1) then
@@ -177,6 +179,7 @@ if (functionNum == 4) then
         R1 = 4;
         R3 = R2;
         R2 = [DISK_MAP_TABLE + pid * 10 + 8];
+        call MOD_2;
         multipop(R0, R1, R2, R3, R6);
     endif;
     if ([DISK_MAP_TABLE + pid * 10 + 9] != -1) then
@@ -184,6 +187,7 @@ if (functionNum == 4) then
         R1 = 4;
         R3 = R2;
         R2 = [DISK_MAP_TABLE + pid * 10 + 9];      
+        call MOD_2;
         multipop(R0, R1, R2, R3, R6);
     endif;
 

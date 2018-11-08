@@ -137,7 +137,7 @@ else
             //if the resource held is a semaphore update the corresponding count field in the semaphore table
             alias semaphoreEntry R6;
             semaphoreEntry = SEMAPHORE_TABLE + 4 * [newResTable + counter + 1];
-            [semaphoreEntry] = [semaphoreEntry] + 1;
+            [semaphoreEntry + 1] = [semaphoreEntry + 1] + 1;
         endif;
         // If the resource is a file (check the Resource Identifier field in the per-process resource table), then using the open file table index, increment the OPEN INSTANCE COUNT field in the open file table entry.
         if ([newResTable + counter] == FILE) then

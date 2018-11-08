@@ -48,7 +48,6 @@ else
     // Call the Exit Process function in process manager module to
     // deallocate the resources and pages of the current process.
     multipush(R0, R6, R8);
-    R0 = 0;
     R1 = 3;
     R2 = pid;
     R3 = 0;
@@ -136,7 +135,6 @@ else
         //loadi([PTBR + 8 + iter * 2], [INODE_TABLE + 16 * inode_index + 8 + iter]);
         //load([PTBR + 8 + iter * 2], [INODE_TABLE + 16 * inode_index + 8 + iter]);
 
-        R0 = 0;
         R1 = 2;
         R2 = pid;
         R3 = [PTBR + 8 + iter * 2];

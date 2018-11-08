@@ -64,20 +64,24 @@ else
         multipop(R5, R8, R9, R10);
         [newPTBR + 4] = R0;
         [newPTBR + 5] = "0110";
+        [PTBR + 4] = R0;
+        [PTBR + 5] = "0110";
         multipush(R5, R8, R9, R10);
         R1 = 1;
         call MOD_2;
         multipop(R5, R8, R9, R10);
         [newPTBR + 6] = R0;
         [newPTBR + 7] = "0110";
+        [PTBR + 6] = R0;
+        [PTBR + 7] = "0110";
     else 
         [newPTBR + 4] = [PTBR + 4];
         [newPTBR + 5] = "0110";
         [newPTBR + 6] = [PTBR + 6];
         [newPTBR + 7] = "0110";
-        [MEMORY_FREE_LIST + [newPTBR + 4]] = [MEMORY_FREE_LIST + [newPTBR + 4]] + 1;
-        [MEMORY_FREE_LIST + [newPTBR + 6]] = [MEMORY_FREE_LIST + [newPTBR + 6]] + 1;
     endif;
+    [MEMORY_FREE_LIST + [newPTBR + 4]] = [MEMORY_FREE_LIST + [newPTBR + 4]] + 1;
+    [MEMORY_FREE_LIST + [newPTBR + 6]] = [MEMORY_FREE_LIST + [newPTBR + 6]] + 1;
 
     alias oldProcess R11;
     oldProcess = PROCESS_TABLE + 16 * [SYSTEM_STATUS_TABLE + 1];
