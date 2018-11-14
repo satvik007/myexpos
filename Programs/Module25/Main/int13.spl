@@ -65,7 +65,6 @@ endif;
 
 // Semrelease
 if (syscall == 18) then
-	
 	// Set the MODE_FLAG in the Process Table to 18 and switch to kernel stack.
 	[PROCESS_TABLE + pid * 16 + 9] = 18;
 
