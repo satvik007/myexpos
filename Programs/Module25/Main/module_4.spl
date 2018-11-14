@@ -77,6 +77,7 @@ endif;
 
 
 // Terminal Write
+// PID, Word
 if (functionNum == 3) then
 
     multipush(R1, R2, R3, R8, R9);
