@@ -66,6 +66,25 @@ if (functionNum == 2) then
     return;
 endif;
 
+// Get Free Block  
+// NIL 
+// Free Block Number or -1
+if (functionNum == 3) then
+    // loop through entries in the Disk Free List from DISK_FREE_AREA to DISK_SWAP_AREA - 1{    /* User Block, not preallocated to the OS or swap area */
+    alias iter R4;
+    iter = DISK_FREE_AREA;
+    while (iter < DISK_SWAP_AREA) do
+        if ([DISK_FREE_LIST + iter] == 0) then
+            R0 = iter;
+            return;
+        endif;
+        iter = iter + 1;
+    endwhile;
+    R0 = -1;
+    return;
+
+endif;
+
 // Release Block (function number = 4)
 // blockNum, pid
 if (functionNum == 4) then

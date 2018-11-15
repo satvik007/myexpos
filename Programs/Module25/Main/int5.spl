@@ -1,5 +1,5 @@
-// int 4
-// The system calls Open and Close
+// int 5
+// The system calls Open, Close, Seek
 
 alias retVal R9;
 alias syscall R5;
@@ -121,6 +121,46 @@ if (syscall == 3) then
 	[userPage * 512 + RESOURCE_TABLE_OFFSET + 2 * fileDesc] = -1;
 	[retVal] = 0;
 
+endif;
+
+// Interrupt routine 5 (Seek system call)
+// Arguments: File Descriptor(Integer) , Offset (Integer)
+if (syscall == 6) then
+	// Set the MODE_FLAG in the process table entry to 3, 
+	[processTable + 9] = 6;
+
+	alias fileDesc R10;
+	fileDesc = [[PTBR + 2 * ((userSP - 4) / 512)] * 512 + (userSP - 4) % 512];
+
+	alias resTableEntry R11;
+    resTableEntry = [processTable + 11] * 512 + RESOURCE_TABLE_OFFSET + 2 * fileDesc;
+    
+	// 	If file descriptor is invalid, return -1.    /* File descriptor value should be within the range 0 to 7 (both included). */
+	if (fileDesc < 0 || fileDesc > 7) then
+		[retVal] = -1;
+		[processTable + 9] = 0;
+		SP = [processTable + 13];
+		ireturn;
+	endif;
+
+	
+
+	// If the Resource identifier field of the Per Process Resource Table entry is invalid or does not indicate a FILE, return -1.   
+    //                 /* No file is open with this file descriptor. */
+	if ([resTableEntry] != FILE) then
+		[retVal] = -1;
+		[processTable + 9] = 0;
+		SP = [processTable + 13];
+		ireturn;
+	endif;
+
+	// Get the index of the Open File Table entry from the Per Process Resource Table entry.
+	alias fileIndex R12;
+	fileIndex = [userPage * 512 + RESOURCE_TABLE_OFFSET + 2 * fileDesc + 1];
+
+	// Get the index of the Inode Table entry from the Open File Table entry.
+
+	
 endif;
 
 [processTable + 9] = 0;
